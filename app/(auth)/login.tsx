@@ -1,5 +1,6 @@
 import StyledText from '@/components/ui/StyledText';
 import { useAuth } from '@/hooks/useAuth';
+import { useGithubAuth } from '@/hooks/useGithubAuth';
 import { useAuthStore } from '@/store/AuthStore';
 import { type LoginSchema, loginSchema } from '@/utils/validations';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,7 @@ export default function LoginScreen() {
 
 	const { login } = useAuth();
 	const { loading } = useAuthStore();
+	const { signInWithGithub, request } = useGithubAuth();
 
 	const {
 		control,
@@ -30,6 +32,13 @@ export default function LoginScreen() {
 		},
 	});
 
+	const handleGithubLogin = async () => {
+		const result = await signInWithGithub();
+		if (result && !result.success) {
+			Alert.alert('Error', result.message || 'GitHub login failed. Please try again.');
+		}
+	}
+
 	const onSubmit = async (data: LoginSchema) => {
 		const result = await login({
 			email: data.email,
@@ -41,9 +50,8 @@ export default function LoginScreen() {
 			return;
 		}
 
-		// If the server/auth returned a clear message, map it to the password field
 		const message = result.message || 'Login failed. Please try again.';
-		// Common password-related messages
+
 		const passwordRelated = [
 			'Incorrect password',
 			'Please verify your email',
@@ -53,7 +61,6 @@ export default function LoginScreen() {
 		if (passwordRelated.some((m) => message.toLowerCase().includes(m.toLowerCase()))) {
 			setError('password', { type: 'manual', message });
 		} else {
-			// For other messages (like user not found) set on email or show alert
 			if (message.toLowerCase().includes('no account') || message.toLowerCase().includes('user')) {
 				setError('email', { type: 'manual', message });
 			} else {
@@ -199,6 +206,30 @@ export default function LoginScreen() {
                             </StyledText>
 						)}
 					</TouchableOpacity>
+
+					{/* Divider */}
+                    <View className="flex-row items-center my-6">
+                        <View className="flex-1 h-px bg-gray-300" />
+                        <StyledText variant="regular" className="mx-4 text-primary/50">
+                            OR
+                        </StyledText>
+                        <View className="flex-1 h-px bg-gray-300" />
+                    </View>
+
+                    {/* GitHub Sign In Button */}
+                    <TouchableOpacity
+                        className="bg-primary rounded-2xl py-4 items-center flex-row justify-center shadow-xl shadow-primary/30"
+                        onPress={handleGithubLogin}
+                        disabled={!request || loading}
+                    >
+                        <Ionicons name="logo-github" size={24} color="white" />
+                        <StyledText
+                            variant="semibold"
+                            className="text-white text-lg ml-2"
+                        >
+                            Continue with GitHub
+                        </StyledText>
+                    </TouchableOpacity>
 
 					<View className="flex-row justify-center items-center mt-6">
 						<StyledText

@@ -21,7 +21,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "backgroundColor": "#E6F4FE"
+      "backgroundColor": "#E6F4FE",
+      "package": "com.giomjds.commitly"
     },
     "web": {
       "output": "static",
