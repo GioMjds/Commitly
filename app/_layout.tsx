@@ -1,24 +1,60 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import "../global.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/configs/firebase";
+import { useAuthStore } from "@/store/AuthStore";
+import { useFonts } from "expo-font";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const queryClient = new QueryClient();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+	const { setUser, setLoading } = useAuthStore();
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+	const [fontsLoaded] = useFonts({
+		'HubotSans-Black': require("@/assets/fonts/HubotSans-Black.ttf"),
+        'HubotSans-ExtraBold': require("@/assets/fonts/HubotSans-ExtraBold.ttf"),
+        'HubotSans-ExtraLight': require("@/assets/fonts/HubotSans-ExtraLight.ttf"),
+        'HubotSans-Light': require("@/assets/fonts/HubotSans-Light.ttf"),
+        'HubotSans-Medium': require("@/assets/fonts/HubotSans-Medium.ttf"),
+        'HubotSans-Regular': require("@/assets/fonts/HubotSans-Regular.ttf"),
+        'HubotSans-SemiBold': require("@/assets/fonts/HubotSans-SemiBold.ttf"),
+	});
+
+	useEffect(() => {
+        async function prepare() {
+            try {
+                await SystemUI.setBackgroundColorAsync('#222831');
+            } catch (e) {
+                console.warn(e);
+            } finally {
+                await SplashScreen.hideAsync();
+            }
+        }
+
+        prepare();
+
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user);
+            setLoading(false);
+        });
+
+        return unsubscribe;
+    }, [setUser, setLoading, fontsLoaded]);
+	
+	return (
+		<QueryClientProvider client={queryClient}>
+			<SafeAreaProvider>
+				<StatusBar style="auto" />
+				<Stack screenOptions={{ headerShown: false }} />
+			</SafeAreaProvider>
+		</QueryClientProvider>
+	);
 }
