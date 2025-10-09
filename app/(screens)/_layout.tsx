@@ -1,9 +1,14 @@
+import CustomTabBar from "@/components/layout/Tabs";
 import { useAuthStore } from "@/store/AuthStore";
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 export default function ScreensLayout() {
-    const { user } = useAuthStore();
+    const { user, loading } = useAuthStore();
+
+    if (loading) {
+        return null;
+    }
 
     if (!user) {
         return <Redirect href="/(auth)/login" />;
@@ -12,7 +17,32 @@ export default function ScreensLayout() {
     return (
         <>
             <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false }} />
+            <Tabs
+                tabBar={(props) => <CustomTabBar {...props} />}
+                screenOptions={{
+                    headerShown: false,
+                }}
+            >
+                <Tabs.Screen
+                    name="index"
+                    options={{
+                        title: "Dashboard",
+                    }}
+                />
+                <Tabs.Screen
+                    name="add-commit"
+                    options={{
+                        title: "Add",
+                        tabBarStyle: { display: "none" },
+                    }}
+                />
+                <Tabs.Screen
+                    name="history"
+                    options={{
+                        title: "History",
+                    }}
+                />
+            </Tabs>
         </>
-    )
+    );
 }

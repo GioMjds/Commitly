@@ -99,7 +99,7 @@ export default function LoginScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary mb-2"
+							className="text-primary text-xl mb-2"
 						>
 							Email
 						</StyledText>
@@ -135,7 +135,7 @@ export default function LoginScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary mb-2"
+							className="text-primary text-xl mb-2"
 						>
 							Password
 						</StyledText>
@@ -208,7 +208,7 @@ export default function LoginScreen() {
 					</TouchableOpacity>
 
 					{/* Divider */}
-                    <View className="flex-row items-center my-6">
+                    <View className="flex-row items-center my-3">
                         <View className="flex-1 h-px bg-gray-300" />
                         <StyledText variant="regular" className="mx-4 text-primary/50">
                             OR

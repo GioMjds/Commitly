@@ -94,7 +94,7 @@ export default function RegisterScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary mb-2"
+							className="text-primary text-xl mb-2"
 						>
 							Email
 						</StyledText>
@@ -130,7 +130,7 @@ export default function RegisterScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary mb-2"
+							className="text-primary text-xl mb-2"
 						>
 							Password
 						</StyledText>
@@ -177,7 +177,7 @@ export default function RegisterScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary mb-2"
+							className="text-primary text-xl mb-2"
 						>
 							Confirm Password
 						</StyledText>
@@ -241,7 +241,7 @@ export default function RegisterScreen() {
 					</TouchableOpacity>
 
 					{/* Divider */}
-					<View className="flex-row items-center my-6">
+					<View className="flex-row items-center my-3">
 						<View className="flex-1 h-px bg-gray-300" />
 						<StyledText
 							variant="regular"
