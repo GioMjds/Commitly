@@ -1,16 +1,14 @@
 import StyledText from "@/components/ui/StyledText";
 import { DailyCommit } from "@/types/Commit.types";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Linking, TouchableOpacity, View } from "react-native";
 
 interface CommitCardProps {
     commit: DailyCommit;
-    onEdit: (commit: DailyCommit) => void;
-    onDelete: (id: string) => void;
 }
 
-export default function CommitCard({ commit, onEdit, onDelete }: CommitCardProps) {
+export default function CommitCard({ commit }: CommitCardProps) {
     const [expanded, setExpanded] = useState(false);
     const isGitHubSync = commit.tag === 'github-sync';
     const hasGitHubCommits = commit.githubCommits && commit.githubCommits.length > 0;
@@ -57,24 +55,6 @@ export default function CommitCard({ commit, onEdit, onDelete }: CommitCardProps
                         {formatTime(commit.createdAt)}
                     </StyledText>
                 </View>
-
-                {/* Action buttons */}
-                <View className="flex-row gap-2">
-                    {!isGitHubSync && (
-                        <TouchableOpacity
-                            onPress={() => onEdit(commit)}
-                            className="bg-secondary/10 p-2 rounded-lg"
-                        >
-                            <Ionicons name="pencil" size={18} color="#0891b2" />
-                        </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                        onPress={() => onDelete(commit.id)}
-                        className="bg-red-500/10 p-2 rounded-lg"
-                    >
-                        <Ionicons name="trash" size={18} color="#ef4444" />
-                    </TouchableOpacity>
-                </View>
             </View>
 
             {/* GitHub Commits Details */}
@@ -99,7 +79,7 @@ export default function CommitCard({ commit, onEdit, onDelete }: CommitCardProps
 
                     {expanded && (
                         <View className="space-y-2">
-                            {commit.githubCommits!.map((ghCommit, index) => (
+                            {commit.githubCommits!.map((ghCommit) => (
                                 <View 
                                     key={ghCommit.sha} 
                                     className="bg-neutral/30 p-3 rounded-lg border-l-4 border-action"
@@ -152,30 +132,6 @@ export default function CommitCard({ commit, onEdit, onDelete }: CommitCardProps
                     )}
                 </View>
             )}
-
-            {/* Note content (only show if not GitHub sync or if no GitHub commits) */}
-            {(!isGitHubSync || !hasGitHubCommits) && (
-                <StyledText variant="regular" className="text-primary/90 text-base mb-3">
-                    {commit.note}
-                </StyledText>
-            )}
-
-            {/* Bottom row with tag and mood */}
-            <View className="flex-row justify-between items-center">
-                {commit.tag && !isGitHubSync ? (
-                    <View className="bg-action/10 px-3 py-1 rounded-full">
-                        <StyledText variant="medium" className="text-action text-sm">
-                            #{commit.tag}
-                        </StyledText>
-                    </View>
-                ) : (
-                    <View />
-                )}
-
-                {commit.mood && (
-                    <StyledText className="text-2xl">{commit.mood}</StyledText>
-                )}
-            </View>
         </View>
     );
 }

@@ -105,7 +105,7 @@ export default function RegisterScreen() {
 								field: { onChange, onBlur, value },
 							}) => (
 								<TextInput
-									className="bg-white rounded-2xl px-4 py-4 mb-2 text-primary border border-gray-200"
+									className="bg-white rounded-2xl px-4 py-4 mb-2 font-hubot text-primary border border-gray-200"
 									placeholder="Enter your email"
 									placeholderTextColor="#94a3b8"
 									onBlur={onBlur}
@@ -142,7 +142,7 @@ export default function RegisterScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 mb-2 text-primary border border-gray-200 pr-12"
+										className="bg-white rounded-2xl px-4 py-4 mb-2 font-hubot text-primary border border-gray-200 pr-12"
 										placeholder="Create a password"
 										placeholderTextColor="#94a3b8"
 										onBlur={onBlur}
@@ -189,7 +189,7 @@ export default function RegisterScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 mb-2 text-primary border border-gray-200 pr-12"
+										className="bg-white rounded-2xl px-4 py-4 mb-2 font-hubot text-primary border border-gray-200 pr-12"
 										placeholder="Confirm your password"
 										placeholderTextColor="#94a3b8"
 										onBlur={onBlur}

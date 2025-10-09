@@ -4,17 +4,16 @@ import StyledText from "@/components/ui/StyledText";
 import { useCommit } from "@/hooks/useCommit";
 import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
-import { DailyCommit } from "@/types/Commit.types";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback } from "react";
-import { ActivityIndicator, Alert, FlatList, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HistoryScreen() {
     const { user } = useAuthStore();
     const { commits, loading } = useCommitStore();
-    const { fetchCommits, removeCommit } = useCommit();
+    const { fetchCommits } = useCommit();
 
     // Check if user is signed in with GitHub
     const isGitHubUser = user?.providerData?.some(
@@ -29,60 +28,6 @@ export default function HistoryScreen() {
                 fetchCommits();
             }
         }, [user, fetchCommits])
-    );
-
-    const handleEdit = (commit: DailyCommit) => {
-        router.push({
-            pathname: "/add-commit" as any,
-            params: { id: commit.id },
-        });
-    };
-
-    const handleDelete = (id: string) => {
-        Alert.alert(
-            "Delete Commit",
-            "Are you sure you want to delete this commit? This action cannot be undone.",
-            [
-                {
-                    text: "Cancel",
-                    style: "cancel",
-                },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        const result = await removeCommit(id);
-                        if (!result.success) {
-                            Alert.alert("Error", result.message);
-                        }
-                    },
-                },
-            ]
-        );
-    };
-
-    const renderHeader = () => (
-        <View className="mb-4">
-            <Header 
-                title="History" 
-                subtitle="Your journey of continuous improvement" 
-            />
-            {commits.length > 0 && (
-                <View className="mt-4 bg-secondary/10 rounded-2xl p-4">
-                    <View className="flex-row items-center justify-between">
-                        <View>
-                            <StyledText variant="medium" className="text-primary/70 text-sm">
-                                Total Commits
-                            </StyledText>
-                            <StyledText variant="extrabold" className="text-secondary text-3xl">
-                                {commits.length}
-                            </StyledText>
-                        </View>
-                        <Ionicons name="calendar" size={40} color="#0891b2" />
-                    </View>
-                </View>
-            )}
-        </View>
     );
 
     const renderEmpty = () => (
@@ -141,17 +86,19 @@ export default function HistoryScreen() {
     return (
         <SafeAreaView className="flex-1 bg-neutral">
             <View className="flex-1 px-6 py-6">
+                <Header 
+                    title="History" 
+                    subtitle="Your journey of continuous improvement" 
+                />
+
                 <FlatList
                     data={commits}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
                         <CommitCard
                             commit={item}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
                         />
                     )}
-                    ListHeaderComponent={renderHeader}
                     ListEmptyComponent={renderEmpty}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingBottom: 20 }}

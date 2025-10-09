@@ -2,6 +2,7 @@ import Header from '@/components/layout/Header';
 import Alert from '@/components/ui/Alert';
 import StyledText from '@/components/ui/StyledText';
 import { useCommit } from '@/hooks/useCommit';
+import { useGithubAuth } from '@/hooks/useGithubAuth';
 import { useGithubCommits } from '@/hooks/useGithubCommits';
 import { useAuthStore } from '@/store/AuthStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,9 +18,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
 	const { user } = useAuthStore();
-	const { syncSettings, updateSyncSettings, syncGithubCommits, loading } =
-		useGithubCommits();
+	const { syncSettings, updateSyncSettings, syncGithubCommits, loading } = useGithubCommits();
     const { fetchCommits } = useCommit();
+	const { linkGithubAccount } = useGithubAuth();
+
 	const [alertVisible, setAlertVisible] = useState<boolean>(false);
 	const [alertConfig, setAlertConfig] = useState({
 		title: '',
@@ -27,8 +29,14 @@ export default function SettingsScreen() {
 		icon: 'checkmark-circle-outline' as keyof typeof Ionicons.glyphMap,
 	});
 
+	// Check if user has GitHub provider
 	const isGitHubUser = user?.providerData?.some(
 		(provider) => provider.providerId === 'github.com'
+	);
+
+	// Check if user is email/password only
+	const isEmailUser = user?.providerData?.every(
+		(provider) => provider.providerId === 'password'
 	);
 
 	const handleToggleSync = async () => {
@@ -82,6 +90,23 @@ export default function SettingsScreen() {
         setAlertVisible(true);
     };
 
+	const handleLinkGithub = async () => {
+		const result = await linkGithubAccount();
+		
+		if (result && result.success !== undefined) {
+			setAlertConfig({
+				title: result.success ? 'Success' : 'Error',
+				message: result.message || (result.success 
+					? 'GitHub account linked successfully! Your profile has been updated.' 
+					: 'Failed to link GitHub account'),
+				icon: result.success
+					? 'checkmark-circle-outline'
+					: 'alert-circle-outline',
+			});
+			setAlertVisible(true);
+		}
+	};
+
 	return (
 		<SafeAreaView className="flex-1 bg-neutral">
 			<ScrollView className="flex-1 px-6 py-6">
@@ -97,7 +122,48 @@ export default function SettingsScreen() {
 					</StyledText>
 
 					<View className="bg-white rounded-2xl p-5 shadow-md">
-						{!isGitHubUser ? (
+						{/* Email/Password User - Not Yet Linked */}
+						{isEmailUser && !isGitHubUser ? (
+							<View className="items-center py-4">
+								<Ionicons
+									name="logo-github"
+									size={48}
+									color="#94a3b8"
+								/>
+								<StyledText
+									variant="semibold"
+									className="text-primary text-lg mt-3 mb-2"
+								>
+									Connect GitHub Account
+								</StyledText>
+								<StyledText
+									variant="light"
+									className="text-primary/60 text-center mb-4 px-4"
+								>
+									Link your GitHub account to automatically sync commits and update your profile picture
+								</StyledText>
+								<TouchableOpacity
+									onPress={handleLinkGithub}
+									disabled={loading}
+									className="bg-primary rounded-2xl px-6 py-3 flex-row items-center shadow-lg shadow-primary/30"
+								>
+									{loading ? (
+										<ActivityIndicator size="small" color="#ffffff" />
+									) : (
+										<>
+											<Ionicons name="logo-github" size={20} color="#ffffff" />
+											<StyledText
+												variant="semibold"
+												className="text-white ml-2"
+											>
+												Connect GitHub
+											</StyledText>
+										</>
+									)}
+								</TouchableOpacity>
+							</View>
+						) : !isGitHubUser ? (
+							/* No GitHub at all */
 							<View className="items-center py-4">
 								<Ionicons
 									name="logo-github"
@@ -112,6 +178,7 @@ export default function SettingsScreen() {
 								</StyledText>
 							</View>
 						) : (
+							/* GitHub User - Full Sync Features */
 							<>
 								{/* Enable Sync Toggle */}
 								<View className="flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200">

@@ -1,10 +1,12 @@
 import Alert from '@/components/ui/Alert';
 import StyledText from '@/components/ui/StyledText';
+import { database } from '@/configs/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/AuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { ref as dbRef, onValue } from 'firebase/database';
+import React, { useEffect, useState } from 'react';
 import { Image, Modal, Pressable, TouchableOpacity, View } from 'react-native';
 
 interface HeaderProps {
@@ -14,17 +16,38 @@ interface HeaderProps {
 }
 
 const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
-	const { user } = useAuthStore();
-	const { logout } = useAuth();
 	const [isDropdownVisible, setIsDropdownVisible] = useState<boolean>(false);
 	const [isLogoutAlertVisible, setIsLogoutAlertVisible] = useState<boolean>(false);
 	const [errorAlertVisible, setErrorAlertVisible] = useState<boolean>(false);
 	const [errorMessage, setErrorMessage] = useState<string>('');
+	const [githubInfo, setGithubInfo] = useState<{ username?: string; avatarUrl?: string; name?: string } | null>(null);
+	
+	const { user } = useAuthStore();
+	const { logout } = useAuth();
 
 	const handleLogout = () => {
 		setIsDropdownVisible(false);
 		setIsLogoutAlertVisible(true);
 	};
+
+	useEffect(() => {
+		if (!user) return;
+		const githubRef = dbRef(database, `users/${user.uid}/github`);
+		const unsubscribe = onValue(githubRef, (snapshot) => {
+			const val = snapshot.val();
+			if (val) {
+				setGithubInfo({
+					username: val.username,
+					avatarUrl: val.avatarUrl || val.photoURL || undefined,
+					name: val.name || undefined,
+				});
+			} else {
+				setGithubInfo(null);
+			}
+		});
+
+		return () => unsubscribe();
+	}, [user]);
 
 	const confirmLogout = async () => {
 		const result = await logout();
@@ -52,14 +75,14 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 				
 				{showProfile && user && (
 					<View>
-						{/* Profile Image */}
+						{/* Profile Image (prefer GitHub avatar if available) */}
 						<TouchableOpacity 
 							className="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary"
 							onPress={() => setIsDropdownVisible(!isDropdownVisible)}
 						>
-							{user.photoURL ? (
+							{githubInfo?.avatarUrl || user.photoURL ? (
 								<Image
-									source={{ uri: user.photoURL }}
+									source={{ uri: githubInfo?.avatarUrl || user.photoURL! }}
 									className="w-full h-full"
 									resizeMode="cover"
 								/>
@@ -89,9 +112,12 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 										<View className="absolute right-4 top-24 bg-white rounded-2xl shadow-2xl border border-gray-200 min-w-[180px] overflow-hidden">
 											{/* User Info */}
 											<View className="px-4 py-3 border-b border-gray-200 bg-gray-100">
-												<StyledText variant="medium" className="text-primary text-xl" numberOfLines={1}>
-													{user.displayName}
-												</StyledText>
+												{/* Prefer GitHub name + username when available */}
+												{(githubInfo?.name || user.displayName) && (
+													<StyledText variant="medium" className="text-primary text-xl" numberOfLines={1}>
+														{githubInfo?.name || user.displayName}
+													</StyledText>
+												)}
 												<StyledText variant="medium" className="text-primary text-sm" numberOfLines={1}>
 													{user.email}
 												</StyledText>

@@ -33,38 +33,19 @@ export default function StreakBadge({ currentStreak, longestStreak }: StreakBadg
         return "🏆🔥🏆";
     };
 
-    const getStreakMessage = () => {
-        if (currentStreak === 0) return "Start your streak today!";
-        if (currentStreak === 1) return "Great start!";
-        if (currentStreak < 7) return "Keep it up!";
-        if (currentStreak < 14) return "You're on fire!";
-        if (currentStreak < 30) return "Amazing streak!";
-        return "Legendary commitment!";
-    };
-
     return (
         <View className="bg-indigo-600 rounded-3xl p-6 shadow-lg">
             {/* Current Streak Display */}
             <View className="mb-4">
                 <StyledText variant="medium" className="text-gray-100 text-xl mb-1">
-                    Current Streak
+                    Current Streak (days)
                 </StyledText>
                 <View className="flex-row items-center">
-                    <StyledText variant="black" className="text-gray-100 text-6xl">
+                    <StyledText variant="black" className="text-gray-100 text-8xl">
                         {currentStreak}
                     </StyledText>
                     <StyledText className="text-4xl ml-2">{getStreakEmoji()}</StyledText>
                 </View>
-                <StyledText variant="medium" className="text-gray-100 text-2xl mt-2">
-                    {currentStreak === 1 ? "day" : "days"}
-                </StyledText>
-            </View>
-
-            {/* Message */}
-            <View className="mb-3">
-                <StyledText variant="semibold" className="text-gray-100 text-2xl">
-                    {getStreakMessage()}
-                </StyledText>
             </View>
 
             {/* Longest Streak */}

@@ -67,28 +67,28 @@ export default function VerifyScreen() {
 
 					<StyledText
 						variant="black"
-						className="text-3xl text-primary mb-4 text-center"
+						className="text-5xl text-primary mb-4 text-center"
 					>
 						Verify Your Email
 					</StyledText>
 
 					<StyledText
 						variant="light"
-						className="text-lg text-primary opacity-70 text-center mb-2"
+						className="text-2xl text-primary opacity-70 text-center mb-2"
 					>
 						We&apos;ve sent a verification link to
 					</StyledText>
 
 					<StyledText
 						variant="semibold"
-						className="text-lg text-primary text-center mb-6"
+						className="text-xl underline text-primary text-center mb-6"
 					>
 						{user?.email}
 					</StyledText>
 
 					<StyledText
 						variant="regular"
-						className="text-base text-primary opacity-70 text-center"
+						className="text-lg text-primary/70 text-center"
 					>
 						Please check your inbox and click the verification link
 						to activate your account.
@@ -97,7 +97,7 @@ export default function VerifyScreen() {
 
 				<View className="w-full space-y-4">
 					<TouchableOpacity
-						className="bg-action rounded-2xl py-4 items-center shadow-lg shadow-action/30"
+						className="bg-action rounded-2xl py-4 mb-2 items-center shadow-lg shadow-action/30"
 						onPress={checkEmailVerification}
 					>
 						<StyledText
@@ -125,7 +125,7 @@ export default function VerifyScreen() {
 							<TouchableOpacity>
 								<StyledText
 									variant="medium"
-									className="text-primary opacity-70"
+									className="text-primary/70 text-lg"
 								>
 									Back to Sign In
 								</StyledText>

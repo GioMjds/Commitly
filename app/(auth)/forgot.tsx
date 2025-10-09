@@ -1,17 +1,18 @@
-import {
-	View,
-	TextInput,
-	TouchableOpacity,
-	Alert,
-	ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import StyledText from '@/components/ui/StyledText';
 import { useAuth } from '@/hooks/useAuth';
 import { forgotPasswordSchema, ForgotPasswordSchema } from '@/utils/validations';
-import StyledText from '@/components/ui/StyledText';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
+import { Controller, useForm } from 'react-hook-form';
+import {
+	Alert,
+	Image,
+	ScrollView,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPasswordScreen() {
 	const { forgotPassword } = useAuth();
@@ -53,7 +54,14 @@ export default function ForgotPasswordScreen() {
 				contentContainerStyle={{ flexGrow: 1 }}
 			>
 				<View className="flex-1 px-6 justify-center">
-					<View className="mb-10">
+					<View className="items-center">
+						<Image
+							source={require('@/assets/images/commitly1.png')}
+							className="w-48 h-48 self-center rounded-full"
+							resizeMode="center"
+						/>
+					</View>
+					<View className="mb-6">
 						<StyledText
 							variant="black"
 							className="text-4xl text-primary mb-2"
@@ -62,7 +70,7 @@ export default function ForgotPasswordScreen() {
 						</StyledText>
 						<StyledText
 							variant="light"
-							className="text-lg text-primary opacity-70"
+							className="text-lg text-primary/70"
 						>
 							Enter your email to receive reset instructions
 						</StyledText>
@@ -83,7 +91,7 @@ export default function ForgotPasswordScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 text-primary border border-gray-200"
+										className="bg-white rounded-2xl px-4 py-4 mb-4 text-primary border border-gray-200"
 										placeholder="Enter your email"
 										placeholderTextColor="#94a3b8"
 										onBlur={onBlur}
@@ -124,7 +132,7 @@ export default function ForgotPasswordScreen() {
 								<TouchableOpacity>
 									<StyledText
 										variant="semibold"
-										className="text-secondary"
+										className="text-secondary text-xl"
 									>
 										Back to Sign In
 									</StyledText>
