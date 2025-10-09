@@ -30,13 +30,6 @@ export default function ScreensLayout() {
                     }}
                 />
                 <Tabs.Screen
-                    name="add-commit"
-                    options={{
-                        title: "Add",
-                        tabBarStyle: { display: "none" },
-                    }}
-                />
-                <Tabs.Screen
                     name="history"
                     options={{
                         title: "History",

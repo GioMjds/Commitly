@@ -7,10 +7,9 @@ import StyledText from '../ui/StyledText';
 
 type IconName =
 	| 'home'
-	| 'add-circle'
 	| 'list'
+	| 'settings'
 	| 'home-outline'
-	| 'add-circle-outline'
 	| 'list-outline'
 	| 'settings-outline';
 
@@ -28,12 +27,6 @@ const TAB_CONFIG: Record<string, TabConfig> = {
 		icon: 'home',
 		iconOutline: 'home-outline',
 	},
-	'add-commit': {
-		name: 'add-commit',
-		label: 'Add',
-		icon: 'add-circle',
-		iconOutline: 'add-circle-outline',
-	},
 	history: {
 		name: 'history',
 		label: 'History',
@@ -43,7 +36,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
 	settings: {
 		name: 'settings',
 		label: 'Settings',
-		icon: 'settings-outline',
+		icon: 'settings',
 		iconOutline: 'settings-outline',
 	}
 };
@@ -99,56 +92,6 @@ export default function CustomTabBar({
 							target: route.key,
 						});
 					};
-
-					// Special styling for middle "Add" button
-					const isAddButton = route.name === 'add-commit';
-
-					if (isAddButton) {
-						return (
-							<TouchableOpacity
-								key={route.key}
-								accessibilityRole="button"
-								accessibilityState={
-									isFocused ? { selected: true } : {}
-								}
-								accessibilityLabel={
-									options.tabBarAccessibilityLabel
-								}
-								onPress={onPress}
-								onLongPress={onLongPress}
-								className="items-center justify-center -mt-6"
-							>
-								<View
-									className={`rounded-full p-4 shadow-lg ${
-										isFocused ? 'bg-action' : 'bg-action'
-									}`}
-									style={{
-										shadowColor: '#7C3AED',
-										shadowOffset: { width: 0, height: 4 },
-										shadowOpacity: 0.3,
-										shadowRadius: 8,
-										elevation: 8,
-									}}
-								>
-									<Ionicons
-										name={tabConfig.icon}
-										size={32}
-										color="white"
-									/>
-								</View>
-								<StyledText
-									variant="semibold"
-									className={`text-md mt-2 ${
-										isFocused
-											? 'text-action'
-											: 'text-gray-500'
-									}`}
-								>
-									{tabConfig.label}
-								</StyledText>
-							</TouchableOpacity>
-						);
-					}
 
 					return (
 						<TouchableOpacity

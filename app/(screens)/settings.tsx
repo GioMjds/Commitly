@@ -1,19 +1,19 @@
 import Header from '@/components/layout/Header';
-import StyledText from '@/components/ui/StyledText';
 import Alert from '@/components/ui/Alert';
+import StyledText from '@/components/ui/StyledText';
+import { useCommit } from '@/hooks/useCommit';
 import { useGithubCommits } from '@/hooks/useGithubCommits';
 import { useAuthStore } from '@/store/AuthStore';
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-	ActivityIndicator,
-	ScrollView,
-	Switch,
-	TouchableOpacity,
-	View,
+    ActivityIndicator,
+    ScrollView,
+    Switch,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useCommit } from '@/hooks/useCommit';
 
 export default function SettingsScreen() {
 	const { user } = useAuthStore();
@@ -54,29 +54,6 @@ export default function SettingsScreen() {
 		setAlertVisible(true);
 	};
 
-	const handleToggleAutoCreate = async () => {
-		const result = await updateSyncSettings({
-			autoCreateCommits: !syncSettings.autoCreateCommits,
-		});
-
-		if (result.success) {
-			setAlertConfig({
-				title: 'Success',
-				message: syncSettings.autoCreateCommits
-					? 'Auto-create disabled'
-					: 'Auto-create enabled',
-				icon: 'checkmark-circle-outline',
-			});
-		} else {
-			setAlertConfig({
-				title: 'Error',
-				message: result.message,
-				icon: 'alert-circle-outline',
-			});
-		}
-		setAlertVisible(true);
-	};
-
 	const handleManualSync = async () => {
         if (!isGitHubUser) {
             setAlertConfig({
@@ -90,7 +67,8 @@ export default function SettingsScreen() {
 
         const result = await syncGithubCommits();
 
-        if (result.success && syncSettings.autoCreateCommits) {
+        // ✅ Always refresh commits after sync (whether auto-create is on or not)
+        if (result.success) {
             await fetchCommits();
         }
 
@@ -142,13 +120,13 @@ export default function SettingsScreen() {
 											variant="semibold"
 											className="text-primary text-lg"
 										>
-											Enable Sync
+											Enable GitHub Sync
 										</StyledText>
 										<StyledText
 											variant="light"
 											className="text-primary/60 text-sm"
 										>
-											Automatically fetch GitHub commits
+											Automatically sync and create daily commits from your GitHub activity
 										</StyledText>
 									</View>
 									<Switch
@@ -159,35 +137,6 @@ export default function SettingsScreen() {
 											true: '#7C3AED',
 										}}
 										thumbColor="#ffffff"
-									/>
-								</View>
-
-								{/* Auto-Create Commits Toggle */}
-								<View className="flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200">
-									<View className="flex-1">
-										<StyledText
-											variant="semibold"
-											className="text-primary text-lg"
-										>
-											Auto-Create Commits
-										</StyledText>
-										<StyledText
-											variant="light"
-											className="text-primary/60 text-sm"
-										>
-											Create daily commits from GitHub
-											activity
-										</StyledText>
-									</View>
-									<Switch
-										value={syncSettings.autoCreateCommits}
-										onValueChange={handleToggleAutoCreate}
-										trackColor={{
-											false: '#cbd5e1',
-											true: '#7C3AED',
-										}}
-										thumbColor="#ffffff"
-										disabled={!syncSettings.enabled}
 									/>
 								</View>
 

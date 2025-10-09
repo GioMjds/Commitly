@@ -1,10 +1,10 @@
-import axios from 'axios';
-import { useAuthStore } from '@/store/AuthStore';
 import { database, firestore } from '@/configs/firebase';
-import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/store/AuthStore';
+import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { addDoc, collection, where, query, getDocs } from 'firebase/firestore';
 import { get, onValue, ref, set } from 'firebase/database';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 
 interface GitHubCommit {
 	sha: string;
@@ -133,8 +133,8 @@ export const useGithubCommits = () => {
 				(commit) => new Date(commit.date) > lastSyncDate
 			);
 
-			// ✅ NEW: Auto-create DailyCommits in Firestore if enabled
-			if (syncSettings.autoCreateCommits && newCommits.length > 0) {
+			// ✅ Always auto-create DailyCommits in Firestore
+			if (newCommits.length > 0) {
 				const createdCount = await createDailyCommitsFromGitHub(
 					newCommits
 				);
@@ -157,25 +157,19 @@ export const useGithubCommits = () => {
 				return {
 					success: true,
 					commits: newCommits,
-					message: `Synced ${newCommits.length} GitHub commits and created ${createdCount} daily commits.`,
+					message: `✅ Synced ${newCommits.length} GitHub commits and created ${createdCount} daily commits!`,
 				};
 			}
 
-			// Store in Realtime Database only
-			const commitsRef = ref(database, `users/${user.uid}/githubCommits`);
-			await set(commitsRef, {
-				commits: newCommits,
-				lastSync: new Date().toISOString(),
-			});
-
+			// No new commits
 			await updateSyncSettings({
 				lastSyncDate: new Date().toISOString(),
 			});
 
 			return {
 				success: true,
-				commits: newCommits,
-				message: `Found ${newCommits.length} new commits synced.`,
+				commits: [],
+				message: `✅ All caught up! No new commits since last sync.`,
 			};
 		} catch (error: any) {
 			if (error?.response?.status === 401) {

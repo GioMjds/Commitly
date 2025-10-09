@@ -2,17 +2,19 @@ import Header from '@/components/layout/Header';
 import StreakBadge from '@/components/ui/StreakBadge';
 import StyledText from '@/components/ui/StyledText';
 import { useCommit } from '@/hooks/useCommit';
+import { useGithubCommits } from '@/hooks/useGithubCommits';
 import { useStreak } from '@/hooks/useStreak';
 import { useAuthStore } from '@/store/AuthStore';
 import { useCommitStore } from '@/store/CommitStore';
 import { DashboardStats, MoodType } from '@/types/Commit.types';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import {
-    ActivityIndicator,
-    ScrollView,
-    TouchableOpacity,
-    View,
+	ActivityIndicator,
+	ScrollView,
+	TouchableOpacity,
+	View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,8 +22,14 @@ export default function DashboardScreen() {
 	const { user } = useAuthStore();
 	const { commits, streakData, loading } = useCommitStore();
 	const { fetchCommits } = useCommit();
+	const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
 
 	useStreak();
+
+	// Check if user is signed in with GitHub
+	const isGitHubUser = user?.providerData?.some(
+		(provider) => provider.providerId === 'github.com'
+	);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -30,6 +38,13 @@ export default function DashboardScreen() {
 			}
 		}, [user, fetchCommits])
 	);
+
+	const handleQuickSync = async () => {
+		const result = await syncGithubCommits();
+		if (result.success) {
+			await fetchCommits();
+		}
+	};
 
 	const stats: DashboardStats = useMemo(() => {
 		const totalCommits = commits.length;
@@ -90,10 +105,14 @@ export default function DashboardScreen() {
 	return (
 		<SafeAreaView className="flex-1 p-6 bg-neutral">
 			{/* Header */}
-			<Header 
-				title="Dashboard" 
-				subtitle="Track your progress and stay consistent" 
-			/>
+			<View className="flex-row justify-between items-center mb-4">
+				<View className="flex-1">
+					<Header 
+						title="Dashboard" 
+						subtitle="Track your progress and stay consistent" 
+					/>
+				</View>
+			</View>
 			<ScrollView
 				className="flex-1"
 				showsVerticalScrollIndicator={false}
@@ -221,33 +240,69 @@ export default function DashboardScreen() {
 				{/* Empty State */}
 				{commits.length === 0 && (
 					<View className="items-center py-12">
-						<StyledText className="text-6xl mb-4">📝</StyledText>
-						<StyledText
-							variant="semibold"
-							className="text-primary text-2xl mb-2"
-						>
-							No commits yet
-						</StyledText>
-						<StyledText
-							variant="light"
-							className="text-primary/60 text-center mb-6"
-						>
-							Start your journey by adding your first daily
-							commit!
-						</StyledText>
-						<TouchableOpacity
-							onPress={() =>
-								router.navigate('/add-commit' as any)
-							}
-							className="bg-action rounded-2xl px-6 py-3"
-						>
-							<StyledText
-								variant="semibold"
-								className="text-white text-lg"
-							>
-								Add Your First Commit
-							</StyledText>
-						</TouchableOpacity>
+						{isGitHubUser ? (
+							<>
+								<Ionicons name="logo-github" size={80} color="#7C3AED" />
+								<StyledText
+									variant="semibold"
+									className="text-primary text-2xl mb-2 mt-4"
+								>
+									Ready to sync!
+								</StyledText>
+								<StyledText
+									variant="light"
+									className="text-primary/60 text-center mb-6 px-8"
+								>
+									Your GitHub activity will automatically appear here. Sync now to get started!
+								</StyledText>
+								<TouchableOpacity
+									onPress={handleQuickSync}
+									disabled={syncLoading}
+									className="bg-action rounded-2xl px-6 py-3 flex-row items-center"
+								>
+									{syncLoading ? (
+										<ActivityIndicator size="small" color="#ffffff" />
+									) : (
+										<>
+											<Ionicons name="sync" size={20} color="#ffffff" />
+											<StyledText
+												variant="semibold"
+												className="text-white text-lg ml-2"
+											>
+												Sync GitHub Commits
+											</StyledText>
+										</>
+									)}
+								</TouchableOpacity>
+							</>
+						) : (
+							<>
+								<StyledText className="text-6xl mb-4">🔗</StyledText>
+								<StyledText
+									variant="semibold"
+									className="text-primary text-2xl mb-2"
+								>
+									Connect GitHub
+								</StyledText>
+								<StyledText
+									variant="light"
+									className="text-primary/60 text-center mb-6 px-8"
+								>
+									Sign in with GitHub to automatically track your coding commits and build your streak!
+								</StyledText>
+								<TouchableOpacity
+									onPress={() => router.push('/settings')}
+									className="bg-action rounded-2xl px-6 py-3"
+								>
+									<StyledText
+										variant="semibold"
+										className="text-white text-lg"
+									>
+										Go to Settings
+									</StyledText>
+								</TouchableOpacity>
+							</>
+						)}
 					</View>
 				)}
 			</ScrollView>
