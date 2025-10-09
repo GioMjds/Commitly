@@ -1,0 +1,16 @@
+name: Sync Commits to Commitly
+
+on:
+  push:
+    branches: ['*']  # Trigger on all branches
+
+jobs:
+  notify-commitly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Commitly Sync
+        run: |
+          curl -X PATCH \
+            "https://commitly-38c81-default-rtdb.firebaseio.com/users/${{ secrets.COMMITLY_USER_ID }}/githubWebhook/trigger.json" \
+            -H "Content-Type: application/json" \
+            -d 'true'
