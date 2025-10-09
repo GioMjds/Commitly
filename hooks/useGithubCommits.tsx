@@ -286,6 +286,13 @@ export const useGithubCommits = () => {
                         createdAt: new Date(commits[0].date),
                         updatedAt: now,
                         date: date,
+                        githubCommits: commits.map((c: GitHubCommit) => ({
+                            sha: c.sha,
+                            message: c.message,
+                            repo: c.repo,
+                            url: c.url,
+                            date: c.date,
+                        })),
                     };
 
                     await addDoc(collection(firestore, "commits"), commitData);

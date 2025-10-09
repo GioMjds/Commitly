@@ -1,5 +1,13 @@
 export type MoodType = '😄' | '😐' | '😞' | '😊' | '😔';
 
+export interface GitHubCommitDetail {
+    sha: string;
+    message: string;
+    repo: string;
+    url: string;
+    date: string;
+}
+
 export interface DailyCommit {
     id: string;
     userId: string;
@@ -9,6 +17,7 @@ export interface DailyCommit {
     createdAt: Date;
     updatedAt: Date;
     date: string; // YYYY-MM-DD format for easy querying
+    githubCommits?: GitHubCommitDetail[]; // GitHub commit details if synced from GitHub
 }
 
 export interface StreakData {
