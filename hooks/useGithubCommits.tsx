@@ -45,7 +45,6 @@ export const useGithubCommits = () => {
 				console.log('🔔 GitHub webhook trigger detected - auto-syncing...');
 				// Auto-sync when webhook fires (we'll call it inline to avoid dependency)
 				syncGithubCommits().then(() => {
-					// Reset trigger after sync
 					set(webhookRef, false);
 				});
 			}
@@ -55,7 +54,6 @@ export const useGithubCommits = () => {
 			unsubscribe();
 			webhookUnsubscribe();
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
 	const fetchGithubCommits = async (
