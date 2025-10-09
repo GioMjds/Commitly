@@ -16,12 +16,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/commitly1.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "backgroundColor": "#E6F4FE",
       "package": "com.giomjds.commitly"
     },
     "web": {
@@ -41,11 +39,19 @@
             "backgroundColor": "#0F172A"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "af3b49fb-758a-4ebe-8153-15a372a7fa34"
+      },
+      "router": {}
+    },
+    "owner": "giomjds"
   }
 }

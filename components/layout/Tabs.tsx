@@ -11,7 +11,8 @@ type IconName =
 	| 'list'
 	| 'home-outline'
 	| 'add-circle-outline'
-	| 'list-outline';
+	| 'list-outline'
+	| 'settings-outline';
 
 interface TabConfig {
 	name: string;
@@ -39,6 +40,12 @@ const TAB_CONFIG: Record<string, TabConfig> = {
 		icon: 'list',
 		iconOutline: 'list-outline',
 	},
+	settings: {
+		name: 'settings',
+		label: 'Settings',
+		icon: 'settings-outline',
+		iconOutline: 'settings-outline',
+	}
 };
 
 export default function CustomTabBar({

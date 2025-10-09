@@ -42,6 +42,12 @@ export default function ScreensLayout() {
                         title: "History",
                     }}
                 />
+                <Tabs.Screen
+                    name="settings"
+                    options={{
+                        title: "Settings",
+                    }}
+                />
             </Tabs>
         </>
     );

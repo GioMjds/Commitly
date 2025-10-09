@@ -1,4 +1,4 @@
-import { auth } from "@/configs/firebase";
+import { auth, database } from "@/configs/firebase";
 import { useAuthStore } from "@/store/AuthStore";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
@@ -6,6 +6,8 @@ import { GithubAuthProvider, signInWithCredential } from "firebase/auth";
 import { useEffect } from "react";
 import axios from "axios";
 import { router } from "expo-router";
+import { ref, set } from "firebase/database";
+import * as SecureStore from "expo-secure-store";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -64,6 +66,30 @@ export const useGithubAuth = () => {
                 const credential = GithubAuthProvider.credential(tokenData.access_token);
                 const userCredential = await signInWithCredential(auth, credential);
                 setUser(userCredential.user);
+
+                // ✅ Store GitHub access token securely
+                await SecureStore.setItemAsync(
+                    `github_token_${userCredential.user.uid}`,
+                    tokenData.access_token
+                );
+
+                // ✅ Store GitHub username in Realtime Database
+                const githubUserResponse = await axios.get(
+                    "https://api.github.com/user",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${tokenData.access_token}`,
+                        },
+                    }
+                );
+
+                await set(
+                    ref(database, `users/${userCredential.user.uid}/github`),
+                    {
+                        username: githubUserResponse.data.login,
+                        tokenStored: true,
+                    }
+                );
 
                 router.replace("/(screens)");
 
