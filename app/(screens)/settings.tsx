@@ -13,11 +13,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useCommit } from '@/hooks/useCommit';
 
 export default function SettingsScreen() {
 	const { user } = useAuthStore();
 	const { syncSettings, updateSyncSettings, syncGithubCommits, loading } =
 		useGithubCommits();
+    const { fetchCommits } = useCommit();
 	const [alertVisible, setAlertVisible] = useState<boolean>(false);
 	const [alertConfig, setAlertConfig] = useState({
 		title: '',
@@ -76,27 +78,31 @@ export default function SettingsScreen() {
 	};
 
 	const handleManualSync = async () => {
-		if (!isGitHubUser) {
-			setAlertConfig({
-				title: 'Error',
-				message: 'Please sign in with GitHub to sync commits',
-				icon: 'alert-circle-outline',
-			});
-			setAlertVisible(true);
-			return;
-		}
+        if (!isGitHubUser) {
+            setAlertConfig({
+                title: 'Error',
+                message: 'Please sign in with GitHub to sync commits',
+                icon: 'alert-circle-outline',
+            });
+            setAlertVisible(true);
+            return;
+        }
 
-		const result = await syncGithubCommits();
+        const result = await syncGithubCommits();
 
-		setAlertConfig({
-			title: result.success ? 'Success' : 'Error',
-			message: result.message,
-			icon: result.success
-				? 'checkmark-circle-outline'
-				: 'alert-circle-outline',
-		});
-		setAlertVisible(true);
-	};
+        if (result.success && syncSettings.autoCreateCommits) {
+            await fetchCommits();
+        }
+
+        setAlertConfig({
+            title: result.success ? 'Success' : 'Error',
+            message: result.message,
+            icon: result.success
+                ? 'checkmark-circle-outline'
+                : 'alert-circle-outline',
+        });
+        setAlertVisible(true);
+    };
 
 	return (
 		<SafeAreaView className="flex-1 bg-neutral">
