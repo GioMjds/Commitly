@@ -62,7 +62,7 @@ export default function SettingsScreen() {
 		setAlertVisible(true);
 	};
 
-	const handleManualSync = async () => {
+	const handleManualSync = async (forceSync: boolean = false) => {
         if (!isGitHubUser) {
             setAlertConfig({
                 title: 'Error',
@@ -73,12 +73,10 @@ export default function SettingsScreen() {
             return;
         }
 
-        const result = await syncGithubCommits();
+        const result = await syncGithubCommits(forceSync);
 
         // ✅ Always refresh commits after sync (whether auto-create is on or not)
-        if (result.success) {
-            await fetchCommits();
-        }
+        if (result.success) await fetchCommits();
 
         setAlertConfig({
             title: result.success ? 'Success' : 'Error',
@@ -209,9 +207,9 @@ export default function SettingsScreen() {
 
 								{/* Manual Sync Button */}
 								<TouchableOpacity
-									onPress={handleManualSync}
+									onPress={() => handleManualSync(false)}
 									disabled={loading || !syncSettings.enabled}
-									className={`rounded-2xl py-3 items-center flex-row justify-center ${
+									className={`rounded-2xl py-3 items-center flex-row justify-center mb-3 ${
 										syncSettings.enabled
 											? 'bg-action'
 											: 'bg-gray-300'
@@ -234,6 +232,34 @@ export default function SettingsScreen() {
 												className="text-white ml-2"
 											>
 												Sync Now
+											</StyledText>
+										</>
+									)}
+								</TouchableOpacity>
+
+								{/* Force Sync Button */}
+								<TouchableOpacity
+									onPress={() => handleManualSync(true)}
+									disabled={loading}
+									className="rounded-2xl py-3 items-center flex-row justify-center bg-secondary"
+								>
+									{loading ? (
+										<ActivityIndicator
+											size="small"
+											color="#ffffff"
+										/>
+									) : (
+										<>
+											<Ionicons
+												name="refresh"
+												size={20}
+												color="#ffffff"
+											/>
+											<StyledText
+												variant="semibold"
+												className="text-white ml-2"
+											>
+												Force Sync (Last 90 Days)
 											</StyledText>
 										</>
 									)}

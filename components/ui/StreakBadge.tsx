@@ -9,42 +9,26 @@ interface StreakBadgeProps {
 }
 
 export default function StreakBadge({ currentStreak, longestStreak }: StreakBadgeProps) {
-    const [showAnimation, setShowAnimation] = useState<boolean>(false);
     const [prevStreak, setPrevStreak] = useState<number>(currentStreak);
 
     useEffect(() => {
         if (currentStreak > prevStreak && currentStreak > 0) {
-            setShowAnimation(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-            setTimeout(() => {
-                setShowAnimation(false);
-            }, 2000);
         }
         setPrevStreak(currentStreak);
     }, [currentStreak, prevStreak]);
-
-    const getStreakEmoji = () => {
-        if (currentStreak === 0) return "⚪";
-        if (currentStreak < 3) return "🔥";
-        if (currentStreak < 7) return "🔥🔥";
-        if (currentStreak < 14) return "🔥🔥🔥";
-        if (currentStreak < 30) return "⭐🔥⭐";
-        return "🏆🔥🏆";
-    };
 
     return (
         <View className="bg-indigo-600 rounded-3xl p-6 shadow-lg">
             {/* Current Streak Display */}
             <View className="mb-4">
-                <StyledText variant="medium" className="text-gray-100 text-xl mb-1">
-                    Current Streak (days)
-                </StyledText>
-                <View className="flex-row items-center">
-                    <StyledText variant="black" className="text-gray-100 text-8xl">
+                <View className="inline">
+                    <StyledText variant="black" className="text-gray-100 text-9xl">
                         {currentStreak}
                     </StyledText>
-                    <StyledText className="text-4xl ml-2">{getStreakEmoji()}</StyledText>
+                    <StyledText variant="medium" className="text-gray-100 text-xl mt-1">
+                        Current Streak (days)
+                    </StyledText>
                 </View>
             </View>
 
@@ -62,13 +46,6 @@ export default function StreakBadge({ currentStreak, longestStreak }: StreakBadg
                             <StyledText className="text-lg">🏆</StyledText>
                         </View>
                     </View>
-                </View>
-            )}
-
-            {/* Celebration Animation */}
-            {showAnimation && (
-                <View className="absolute top-0 left-0 right-0 bottom-0 items-center justify-center">
-                    <StyledText className="text-6xl">🎉</StyledText>
                 </View>
             )}
         </View>

@@ -41,7 +41,7 @@ export default function DashboardScreen() {
 	);
 
 	const handleQuickSync = async () => {
-		const result = await syncGithubCommits();
+		const result = await syncGithubCommits(false); // Normal sync, not force
 		if (result.success) {
 			await fetchCommits();
 		}

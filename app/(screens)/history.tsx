@@ -15,12 +15,10 @@ export default function HistoryScreen() {
     const { commits, loading } = useCommitStore();
     const { fetchCommits } = useCommit();
 
-    // Check if user is signed in with GitHub
     const isGitHubUser = user?.providerData?.some(
         (provider) => provider.providerId === 'github.com'
     );
 
-    // Refetch commits when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             if (user) {

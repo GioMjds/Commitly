@@ -113,12 +113,13 @@ export const useGithubCommits = () => {
 		}
 	};
 
-	const syncGithubCommits = async () => {
+	const syncGithubCommits = async (forceSync: boolean = false) => {
 		if (!user) return { success: false, message: 'User not authenticated' };
 		setLoading(true);
 
 		console.log('\n🔄 Starting GitHub sync process...');
 		console.log(`User ID: ${user.uid}`);
+		console.log(`Force sync: ${forceSync}`);
 
 		try {
 			const token = await SecureStore.getItemAsync(
@@ -153,15 +154,27 @@ export const useGithubCommits = () => {
 			
 			const commits = await fetchGithubCommits(username, token);
 
-			const lastSyncDate = syncSettings.lastSyncDate
+			// For force sync, look back 90 days; for first sync 30 days; otherwise use last sync date
+			const lastSyncDate = forceSync
+				? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // 90 days for force
+				: syncSettings.lastSyncDate
 				? new Date(syncSettings.lastSyncDate)
-				: new Date(Date.now() - 24 * 60 * 60 * 1000);
+				: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days for first sync
 
 			console.log(`📅 Last sync date: ${lastSyncDate.toLocaleString()}`);
+			console.log(`📅 Current time: ${new Date().toLocaleString()}`);
 
-			const newCommits = commits.filter(
-				(commit) => new Date(commit.date) > lastSyncDate
-			);
+			// Use >= to include commits from the exact lastSyncDate time
+			const newCommits = commits.filter((commit) => {
+				const commitDate = new Date(commit.date);
+				const isNew = commitDate >= lastSyncDate;
+				
+				if (!isNew) {
+					console.log(`⏭️ Filtering out commit from ${commitDate.toLocaleString()}: ${commit.message.split('\n')[0].substring(0, 50)}`);
+				}
+				
+				return isNew;
+			});
 
 			console.log(`🆕 New commits since last sync: ${newCommits.length}`);
 
