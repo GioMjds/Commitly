@@ -6,14 +6,15 @@ import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback } from "react";
-import { ActivityIndicator, FlatList, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HistoryScreen() {
     const { user } = useAuthStore();
     const { commits, loading } = useCommitStore();
     const { fetchCommits } = useCommit();
+    const [refreshing, setRefreshing] = useState(false);
 
     const isGitHubUser = user?.providerData?.some(
         (provider) => provider.providerId === 'github.com'
@@ -27,6 +28,14 @@ export default function HistoryScreen() {
             }
         }, [user, fetchCommits])
     );
+
+    const onRefresh = useCallback(async () => {
+        if (!user) return;
+        setRefreshing(true);
+        console.log('🔄 Pull-to-refresh triggered in history');
+        await fetchCommits();
+        setRefreshing(false);
+    }, [user, fetchCommits]);
 
     const renderEmpty = () => (
         <View className="items-center py-20">
@@ -100,6 +109,14 @@ export default function HistoryScreen() {
                     ListEmptyComponent={renderEmpty}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingBottom: 20 }}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#7C3AED']}
+                            tintColor="#7C3AED"
+                        />
+                    }
                 />
             </View>
         </SafeAreaView>

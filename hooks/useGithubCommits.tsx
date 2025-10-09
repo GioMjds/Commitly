@@ -38,24 +38,51 @@ export const useGithubCommits = () => {
 			if (snapshot.exists()) setSyncSettings(snapshot.val());
 		});
 
-		return () => unsubscribe();
+		// Listen for webhook triggers from GitHub Actions or external services
+		const webhookRef = ref(database, `users/${user.uid}/githubWebhook/trigger`);
+		const webhookUnsubscribe = onValue(webhookRef, (snapshot) => {
+			if (snapshot.exists() && snapshot.val() === true) {
+				console.log('🔔 GitHub webhook trigger detected - auto-syncing...');
+				// Auto-sync when webhook fires (we'll call it inline to avoid dependency)
+				syncGithubCommits().then(() => {
+					// Reset trigger after sync
+					set(webhookRef, false);
+				});
+			}
+		});
+
+		return () => {
+			unsubscribe();
+			webhookUnsubscribe();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
 	const fetchGithubCommits = async (
 		username: string,
-		token: string
+		token: string,
+		sinceDate?: Date
 	): Promise<GitHubCommit[]> => {
 		try {
 			console.log('🔍 Fetching GitHub commits for user:', username);
+			
+			// Build query with optional date filter
+			let searchQuery = `author:${username}`;
+			if (sinceDate) {
+				// Use ISO date format for GitHub search (YYYY-MM-DD)
+				const sinceDateStr = sinceDate.toISOString().split('T')[0];
+				searchQuery += ` committer-date:>=${sinceDateStr}`;
+				console.log(`📅 Filtering commits since: ${sinceDateStr}`);
+			}
 			
 			const response = await axios.get(
 				`https://api.github.com/search/commits`,
 				{
 					params: {
-						q: `author:${username}`,
+						q: searchQuery,
 						sort: 'committer-date',
 						order: 'desc',
-						per_page: 50,
+						per_page: 100, // Increased to capture more recent commits
 					},
 					headers: {
 						Authorization: `Bearer ${token}`,
@@ -113,13 +140,12 @@ export const useGithubCommits = () => {
 		}
 	};
 
-	const syncGithubCommits = async (forceSync: boolean = false) => {
+	const syncGithubCommits = async () => {
 		if (!user) return { success: false, message: 'User not authenticated' };
 		setLoading(true);
 
 		console.log('\n🔄 Starting GitHub sync process...');
 		console.log(`User ID: ${user.uid}`);
-		console.log(`Force sync: ${forceSync}`);
 
 		try {
 			const token = await SecureStore.getItemAsync(
@@ -152,29 +178,25 @@ export const useGithubCommits = () => {
 			const username = githubDataSnapshot.val().username;
 			console.log(`✅ GitHub username: ${username}`);
 			
-			const commits = await fetchGithubCommits(username, token);
+			// Use a more inclusive time window - go back 48 hours to catch recent commits
+			const lookbackDate = syncSettings.lastSyncDate
+				? new Date(new Date(syncSettings.lastSyncDate).getTime() - 60 * 60 * 1000) // 1 hour buffer
+				: new Date(Date.now() - 48 * 60 * 60 * 1000); // 48 hours default
+			
+			console.log(`📅 Fetching commits since: ${lookbackDate.toLocaleString()}`);
+			
+			const commits = await fetchGithubCommits(username, token, lookbackDate);
 
-			// For force sync, look back 90 days; for first sync 30 days; otherwise use last sync date
-			const lastSyncDate = forceSync
-				? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // 90 days for force
-				: syncSettings.lastSyncDate
+			// Filter to only truly new commits (after lastSyncDate, not lookbackDate)
+			const lastSyncDate = syncSettings.lastSyncDate
 				? new Date(syncSettings.lastSyncDate)
-				: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days for first sync
+				: new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-			console.log(`📅 Last sync date: ${lastSyncDate.toLocaleString()}`);
-			console.log(`📅 Current time: ${new Date().toLocaleString()}`);
+			console.log(`📅 Last sync date (filtering): ${lastSyncDate.toLocaleString()}`);
 
-			// Use >= to include commits from the exact lastSyncDate time
-			const newCommits = commits.filter((commit) => {
-				const commitDate = new Date(commit.date);
-				const isNew = commitDate >= lastSyncDate;
-				
-				if (!isNew) {
-					console.log(`⏭️ Filtering out commit from ${commitDate.toLocaleString()}: ${commit.message.split('\n')[0].substring(0, 50)}`);
-				}
-				
-				return isNew;
-			});
+			const newCommits = commits.filter(
+				(commit) => new Date(commit.date) > lastSyncDate
+			);
 
 			console.log(`🆕 New commits since last sync: ${newCommits.length}`);
 
