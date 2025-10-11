@@ -1,13 +1,15 @@
 import Header from "@/components/layout/Header";
 import CommitCard from "@/components/ui/CommitCard";
+import FilterBar from "@/components/ui/FilterBar";
 import StyledText from "@/components/ui/StyledText";
 import { useCommit } from "@/hooks/useCommit";
 import { useGithubCommits } from "@/hooks/useGithubCommits";
 import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
 import { Ionicons } from "@expo/vector-icons";
+import { isAfter, parseISO, subDays, subMonths, subYears } from 'date-fns';
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,10 +19,79 @@ export default function HistoryScreen() {
     const { fetchCommits } = useCommit();
     const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
     const [refreshing, setRefreshing] = useState(false);
+    
+    // Filter states
+    const [selectedTag, setSelectedTag] = useState<string | null>(null);
+    const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+    const [selectedDateRange, setSelectedDateRange] = useState<'all' | 'week' | 'month' | 'year'>('all');
 
     const isGitHubUser = user?.providerData?.some(
         (provider) => provider.providerId === 'github.com'
     );
+
+    // Extract unique tags and repos from commits
+    const availableTags = useMemo(() => {
+        const tagSet = new Set<string>();
+        commits.forEach(commit => {
+            if (commit.tag) tagSet.add(commit.tag);
+        });
+        return Array.from(tagSet);
+    }, [commits]);
+
+    const availableRepos = useMemo(() => {
+        const repoSet = new Set<string>();
+        commits.forEach(commit => {
+            if (commit.githubCommits) {
+                commit.githubCommits.forEach(ghCommit => {
+                    repoSet.add(ghCommit.repo);
+                });
+            }
+        });
+        return Array.from(repoSet);
+    }, [commits]);
+
+    // Filter commits based on selected filters
+    const filteredCommits = useMemo(() => {
+        let filtered = [...commits];
+
+        // Filter by tag
+        if (selectedTag) {
+            filtered = filtered.filter(commit => commit.tag === selectedTag);
+        }
+
+        // Filter by repo
+        if (selectedRepo) {
+            filtered = filtered.filter(commit => 
+                commit.githubCommits?.some(ghCommit => ghCommit.repo === selectedRepo)
+            );
+        }
+
+        // Filter by date range
+        if (selectedDateRange !== 'all') {
+            const now = new Date();
+            let cutoffDate: Date;
+
+            switch (selectedDateRange) {
+                case 'week':
+                    cutoffDate = subDays(now, 7);
+                    break;
+                case 'month':
+                    cutoffDate = subMonths(now, 1);
+                    break;
+                case 'year':
+                    cutoffDate = subYears(now, 1);
+                    break;
+                default:
+                    cutoffDate = new Date(0);
+            }
+
+            filtered = filtered.filter(commit => 
+                isAfter(parseISO(commit.date), cutoffDate)
+            );
+        }
+
+        return filtered;
+    }, [commits, selectedTag, selectedRepo, selectedDateRange]);
 
     useFocusEffect(
         useCallback(() => {
@@ -31,7 +102,6 @@ export default function HistoryScreen() {
     const onRefresh = useCallback(async () => {
         if (!user) return;
         setRefreshing(true);
-        console.log('🔄 Pull-to-refresh triggered in history');
         await fetchCommits();
         setRefreshing(false);
     }, [user, fetchCommits]);
@@ -103,20 +173,28 @@ export default function HistoryScreen() {
                 <View className="flex-row items-center justify-between mb-2">
                     <View className="flex-1">
                         <Header 
-                            title="History" 
+                            title="Commit History" 
                             subtitle="Your journey of continuous improvement" 
                         />
                     </View>
                 </View>
 
+                {/* Filter Bar */}
+                <FilterBar
+                    tags={availableTags}
+                    repos={availableRepos}
+                    selectedTag={selectedTag}
+                    selectedRepo={selectedRepo}
+                    selectedDateRange={selectedDateRange}
+                    onTagChange={setSelectedTag}
+                    onRepoChange={setSelectedRepo}
+                    onDateRangeChange={setSelectedDateRange}
+                />
+
                 <FlatList
-                    data={commits}
+                    data={filteredCommits}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <CommitCard
-                            commit={item}
-                        />
-                    )}
+                    renderItem={({ item }) => <CommitCard commit={item} /> }
                     ListEmptyComponent={renderEmpty}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingBottom: 20 }}
@@ -139,9 +217,9 @@ export default function HistoryScreen() {
                             syncLoading ? 'bg-gray-400' : 'bg-action'
                         }`}
                         style={{
-                            elevation: 5,
+                            elevation: 3,
                             shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
+                            shadowOffset: { width: 2, height: 2 },
                             shadowOpacity: 0.25,
                             shadowRadius: 3.84,
                         }}

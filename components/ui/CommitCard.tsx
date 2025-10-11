@@ -84,12 +84,9 @@ export default function CommitCard({ commit }: CommitCardProps) {
                                 <Ionicons name="logo-github" size={12} color="#7C3AED" />
                             </View>
                         )}
-                        {isManualCommit && !isGitHubSync && (
+                        {isManualCommit && (
                             <View className="bg-secondary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
                                 <Ionicons name="create" size={12} color="#0EA5A4" />
-                                <StyledText variant="medium" className="text-secondary text-xs">
-                                    Manual
-                                </StyledText>
                             </View>
                         )}
                     </View>

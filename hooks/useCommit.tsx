@@ -2,6 +2,8 @@ import { firestore } from "@/configs/firebase";
 import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
 import { CommitFormData, DailyCommit } from "@/types/Commit.types";
+import NetInfo from "@react-native-community/netinfo";
+import * as Haptics from 'expo-haptics';
 import {
     addDoc,
     collection,
@@ -13,11 +15,56 @@ import {
     updateDoc,
     where,
 } from "firebase/firestore";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 export const useCommit = () => {
     const { user } = useAuthStore();
-    const { setCommits, addCommit, updateCommit, deleteCommit, setLoading } = useCommitStore();
+    const { 
+        setCommits, 
+        addCommit, 
+        updateCommit, 
+        deleteCommit, 
+        setLoading,
+        pendingOperations,
+        addPendingOperation,
+        removePendingOperation,
+        loadPendingOperations
+    } = useCommitStore();
+
+    // Load pending operations on mount
+    useEffect(() => {
+        loadPendingOperations();
+    }, [loadPendingOperations]);
+
+    const processPendingOperations = useCallback(async () => {
+        for (const operation of pendingOperations) {
+            try {
+                if (operation.operation === 'create') {
+                    const docRef = await addDoc(collection(firestore, "commits"), operation.data);
+                    // Update the optimistic commit with real ID
+                    updateCommit(operation.id, { id: docRef.id });
+                } else if (operation.operation === 'update') {
+                    await updateDoc(doc(firestore, "commits", operation.id), operation.data);
+                } else if (operation.operation === 'delete') {
+                    await deleteDoc(doc(firestore, "commits", operation.id));
+                }
+                await removePendingOperation(operation.id);
+            } catch (error) {
+                console.error('Failed to process pending operation:', error);
+            }
+        }
+    }, [pendingOperations, removePendingOperation, updateCommit]);
+
+    // Process pending operations when online
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            if (state.isConnected && pendingOperations.length > 0) {
+                processPendingOperations();
+            }
+        });
+
+        return () => unsubscribe();
+    }, [pendingOperations, processPendingOperations]);
 
     const fetchCommits = useCallback(async () => {
         if (!user) {
@@ -54,41 +101,87 @@ export const useCommit = () => {
     const createCommit = async (data: CommitFormData) => {
         if (!user) return { success: false, message: "User not authenticated" };
 
-        setLoading(true);
-        try {
-            const now = new Date();
-            const dateString = now.toISOString().split("T")[0];
+        const now = new Date();
+        const dateString = now.toISOString().split("T")[0];
+        const optimisticId = `temp_${Date.now()}`;
 
-            const commitData = {
-                userId: user.uid,
-                note: data.note,
-                title: data.title || undefined,
-                timeSpent: data.timeSpent || undefined,
-                timeUnit: data.timeUnit || undefined,
-                difficulty: data.difficulty || undefined,
-                description: data.description || undefined,
-                createdAt: now,
-                updatedAt: now,
-                date: dateString,
-            };
+        const commitData = {
+            userId: user.uid,
+            note: data.note,
+            title: data.title || undefined,
+            timeSpent: data.timeSpent || undefined,
+            timeUnit: data.timeUnit || undefined,
+            difficulty: data.difficulty || undefined,
+            description: data.description || undefined,
+            tag: data.tag || undefined,
+            mood: data.mood || undefined,
+            createdAt: now,
+            updatedAt: now,
+            date: dateString,
+        };
 
-            const docRef = await addDoc(collection(firestore, "commits"), commitData);
+        const optimisticCommit: DailyCommit = {
+            id: optimisticId,
+            ...commitData,
+        };
 
-            const newCommit: DailyCommit = {
-                id: docRef.id,
-                ...commitData,
-            };
+        // Optimistic UI update - add immediately
+        addCommit(optimisticCommit);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-            addCommit(newCommit);
+        // Check network status
+        const netState = await NetInfo.fetch();
+        
+        if (!netState.isConnected) {
+            // Save to pending operations for later sync
+            await addPendingOperation({
+                id: optimisticId,
+                data: commitData,
+                operation: 'create',
+                timestamp: Date.now()
+            });
 
             return {
                 success: true,
-                commit: newCommit,
+                commit: optimisticCommit,
+                message: "Commit saved offline. Will sync when online.",
+                offline: true
+            };
+        }
+
+        // Try to sync immediately if online
+        setLoading(true);
+        try {
+            const docRef = await addDoc(collection(firestore, "commits"), commitData);
+
+            // Update with real ID
+            const realCommit: DailyCommit = {
+                ...optimisticCommit,
+                id: docRef.id,
+            };
+            
+            updateCommit(optimisticId, { id: docRef.id });
+
+            return {
+                success: true,
+                commit: realCommit,
                 message: "Commit created successfully!",
             };
-        } catch (error: any) {
-            const message = error?.message || "Failed to create commit";
-            return { success: false, message };
+        } catch {
+            // On error, keep optimistic UI and queue for later
+            await addPendingOperation({
+                id: optimisticId,
+                data: commitData,
+                operation: 'create',
+                timestamp: Date.now()
+            });
+
+            return { 
+                success: true, 
+                commit: optimisticCommit,
+                message: "Saved locally. Will sync when connection improves.",
+                offline: true
+            };
         } finally {
             setLoading(false);
         }

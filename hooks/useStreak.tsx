@@ -1,6 +1,15 @@
-import { useEffect } from "react";
 import { useCommitStore } from "@/store/CommitStore";
 import { DailyCommit, StreakData } from "@/types/Commit.types";
+import {
+    differenceInDays,
+    format,
+    isToday,
+    isYesterday,
+    parseISO,
+    startOfDay,
+    subDays
+} from 'date-fns';
+import { useEffect } from "react";
 
 export const useStreak = () => {
     const { commits, setStreakData } = useCommitStore();
@@ -14,30 +23,39 @@ export const useStreak = () => {
             };
         }
 
+        // Sort commits by date (most recent first)
         const sortedCommits = [...commits].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        const uniqueDates = Array.from(new Set(sortedCommits.map((c) => c.date)));
+        // Get unique dates using date-fns for proper timezone handling
+        const uniqueDates = Array.from(
+            new Set(
+                sortedCommits.map((c) => {
+                    const commitDate = parseISO(c.date);
+                    return format(startOfDay(commitDate), 'yyyy-MM-dd');
+                })
+            )
+        );
 
         let currentStreak = 0;
-        const today = new Date().toISOString().split("T")[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        
+        // Parse the most recent commit date
+        const mostRecentDate = parseISO(uniqueDates[0]);
+        const mostRecentDay = startOfDay(mostRecentDate);
 
-        const startDate = uniqueDates[0] === today || uniqueDates[0] === yesterday 
-            ? uniqueDates[0] 
-            : null;
-
-        if (startDate) {
+        // Check if streak is active (commit today or yesterday)
+        if (isToday(mostRecentDay) || isYesterday(mostRecentDay)) {
             currentStreak = 1;
-            let expectedDate = new Date(startDate);
+            let expectedDate = subDays(mostRecentDay, 1);
 
+            // Count consecutive days
             for (let i = 1; i < uniqueDates.length; i++) {
-                expectedDate = new Date(expectedDate.getTime() - 86400000); // Previous day
-                const expectedDateString = expectedDate.toISOString().split("T")[0];
-
-                if (uniqueDates[i] === expectedDateString) {
+                const currentCommitDate = startOfDay(parseISO(uniqueDates[i]));
+                
+                if (differenceInDays(expectedDate, currentCommitDate) === 0) {
                     currentStreak++;
+                    expectedDate = subDays(currentCommitDate, 1);
                 } else {
                     break;
                 }
@@ -49,11 +67,9 @@ export const useStreak = () => {
         let tempStreak = 1;
 
         for (let i = 0; i < uniqueDates.length - 1; i++) {
-            const currentDate = new Date(uniqueDates[i]);
-            const nextDate = new Date(uniqueDates[i + 1]);
-            const diffInDays = Math.floor(
-                (currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24)
-            );
+            const currentDate = startOfDay(parseISO(uniqueDates[i]));
+            const nextDate = startOfDay(parseISO(uniqueDates[i + 1]));
+            const diffInDays = differenceInDays(currentDate, nextDate);
 
             if (diffInDays === 1) {
                 tempStreak++;

@@ -1,53 +1,86 @@
-import StyledText from "@/components/ui/StyledText";
-import * as Haptics from "expo-haptics";
-import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import StyledText from '@/components/ui/StyledText';
+import { DashboardStats } from '@/types/Commit.types';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 
-interface StreakBadgeProps {
-    currentStreak: number;
-    longestStreak: number;
-}
+type StreakBadgeProps = {
+	stats: DashboardStats;
+};
 
-export default function StreakBadge({ currentStreak, longestStreak }: StreakBadgeProps) {
-    const [prevStreak, setPrevStreak] = useState<number>(currentStreak);
+export default function StreakBadge({ stats }: StreakBadgeProps) {
+	const { currentStreak, longestStreak, totalCommits } = stats;
+	const [prevStreak, setPrevStreak] = useState<number>(currentStreak);
 
-    useEffect(() => {
-        if (currentStreak > prevStreak && currentStreak > 0) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-        setPrevStreak(currentStreak);
-    }, [currentStreak, prevStreak]);
+	useEffect(() => {
+		if (currentStreak > prevStreak && currentStreak > 0) {
+			Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+		}
+		setPrevStreak(currentStreak);
+	}, [currentStreak, prevStreak]);
 
-    return (
-        <View className="bg-indigo-600 rounded-3xl p-6 shadow-lg">
-            {/* Current Streak Display */}
-            <View className="mb-4">
-                <View className="inline">
-                    <StyledText variant="black" className="text-gray-100 text-9xl">
-                        {currentStreak}
-                    </StyledText>
-                    <StyledText variant="medium" className="text-gray-100 text-xl mt-1">
-                        Current Streak (days)
-                    </StyledText>
-                </View>
-            </View>
+	return (
+		<View className="flex-col gap-4 mb-4">
+			{/* Big Streak Badge */}
+			<View className="bg-indigo-600 rounded-3xl p-6 shadow-lg">
+				<View className="inline">
+					<StyledText
+						variant="black"
+						className="text-neutral text-9xl"
+					>
+						{totalCommits}
+					</StyledText>
+					<StyledText
+						variant="medium"
+						className="text-neutral text-2xl mt-1"
+					>
+						Total Commits
+					</StyledText>
+				</View>
+			</View>
 
-            {/* Longest Streak */}
-            {longestStreak > 0 && (
-                <View className="bg-primary/30 rounded-2xl p-3 mt-2 border border-neutral/10">
-                    <View className="flex-row justify-between items-center">
-                        <StyledText variant="medium" className="text-neutral">
-                            Best Streak
-                        </StyledText>
-                        <View className="flex-row items-center">
-                            <StyledText variant="extrabold" className="text-neutral text-xl mr-1">
-                                {longestStreak}
-                            </StyledText>
-                            <StyledText className="text-lg">🏆</StyledText>
-                        </View>
-                    </View>
-                </View>
-            )}
-        </View>
-    );
+			{/* Cards */}
+			<View className="flex-row flex-1 items-center justify-center gap-4">
+				{/* Current Streak */}
+				<View className="flex-1 bg-orange-600 rounded-3xl p-6 shadow-lg">
+					<View className="flex-1">
+						<View className="flex-row items-center">
+							<StyledText
+								variant="extrabold"
+								className="text-neutral text-5xl mr-2"
+							>
+								{currentStreak}
+							</StyledText>
+						</View>
+						<StyledText
+							variant="medium"
+							className="text-neutral text-xl mt-2"
+						>
+							Current Streak
+						</StyledText>
+					</View>
+				</View>
+
+				{/* Best Streak */}
+				<View className="flex-1 bg-secondary rounded-3xl p-6 shadow-lg">
+					<View className="flex-1">
+						<View className="flex-row items-center">
+							<StyledText
+								variant="extrabold"
+								className="text-neutral text-5xl mr-2"
+							>
+								{longestStreak}
+							</StyledText>
+						</View>
+						<StyledText
+							variant="medium"
+							className="text-neutral text-xl mt-2"
+						>
+							Best Streak
+						</StyledText>
+					</View>
+				</View>
+			</View>
+		</View>
+	);
 }

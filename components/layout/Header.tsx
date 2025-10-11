@@ -67,7 +67,7 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 						{title}
 					</StyledText>
 					{subtitle && (
-						<StyledText variant="light" className="text-primary/70 text-lg">
+						<StyledText variant="light" className="text-primary text-xl">
 							{subtitle}
 						</StyledText>
 					)}
@@ -77,7 +77,7 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 					<View>
 						{/* Profile Image (prefer GitHub avatar if available) */}
 						<TouchableOpacity 
-							className="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary"
+							className="w-16 h-16 rounded-full overflow-hidden border-2 border-action"
 							onPress={() => setIsDropdownVisible(!isDropdownVisible)}
 						>
 							{githubInfo?.avatarUrl || user.photoURL ? (

@@ -1,16 +1,15 @@
 import Header from '@/components/layout/Header';
-import StatsOverview from '@/components/ui/StatsOverview';
+import CommitCalendar from '@/components/ui/CommitCalendar';
 import StreakBadge from '@/components/ui/StreakBadge';
+import StreakCoach from '@/components/ui/StreakCoach';
 import StyledText from '@/components/ui/StyledText';
 import { useCommit } from '@/hooks/useCommit';
-import { useGithubCommits } from '@/hooks/useGithubCommits';
 import { useStreak } from '@/hooks/useStreak';
 import { useAuthStore } from '@/store/AuthStore';
 import { useCommitStore } from '@/store/CommitStore';
 import { DashboardStats, MoodType } from '@/types/Commit.types';
-import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
 	ActivityIndicator,
 	ScrollView,
@@ -23,9 +22,16 @@ export default function DashboardScreen() {
 	const { user } = useAuthStore();
 	const { commits, streakData, loading } = useCommitStore();
 	const { fetchCommits } = useCommit();
-	const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
 
 	useStreak();
+
+	const [previousStreak, setPreviousStreak] = useState(streakData.currentStreak);
+
+	useEffect(() => {
+		if (streakData.currentStreak !== previousStreak) {
+			setPreviousStreak(streakData.currentStreak);
+		}
+	}, [streakData.currentStreak, previousStreak]);
 
 	// Check if user is signed in with GitHub
 	const isGitHubUser = user?.providerData?.some(
@@ -39,13 +45,6 @@ export default function DashboardScreen() {
 			}
 		}, [user, fetchCommits])
 	);
-
-	const handleQuickSync = async () => {
-		const result = await syncGithubCommits();
-		if (result.success) {
-			await fetchCommits();
-		}
-	};
 
 	const stats: DashboardStats = useMemo(() => {
 		const totalCommits = commits.length;
@@ -114,59 +113,27 @@ export default function DashboardScreen() {
 					/>
 				</View>
 			</View>
+
 			<ScrollView
 				className="flex-1"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* Streak Badge */}
-				<View className="mb-6">
-					<StreakBadge
-						currentStreak={stats.currentStreak}
-						longestStreak={stats.longestStreak}
-					/>
-				</View>
+				<StreakBadge stats={stats} />
 
-				<StatsOverview stats={stats} />
+				{/* Streak Coach */}
+				<StreakCoach 
+					currentStreak={streakData.currentStreak} 
+					previousStreak={previousStreak}
+					lastCommitDate={streakData.lastCommitDate}
+				/>
+
+				{/* Commit Calendar */}
+				<CommitCalendar commits={commits} />
 
 				{/* Empty State */}
 				{commits.length === 0 && (
 					<View className="items-center py-12">
-						{isGitHubUser ? (
-							<>
-								<Ionicons name="logo-github" size={80} color="#7C3AED" />
-								<StyledText
-									variant="semibold"
-									className="text-primary text-2xl mb-2 mt-4"
-								>
-									Ready to sync!
-								</StyledText>
-								<StyledText
-									variant="light"
-									className="text-primary/60 text-center mb-6 px-8"
-								>
-									Your GitHub activity will automatically appear here. Sync now to get started!
-								</StyledText>
-								<TouchableOpacity
-									onPress={handleQuickSync}
-									disabled={syncLoading}
-									className="bg-action rounded-2xl px-6 py-3 flex-row items-center"
-								>
-									{syncLoading ? (
-										<ActivityIndicator size="small" color="#ffffff" />
-									) : (
-										<>
-											<Ionicons name="sync" size={20} color="#ffffff" />
-											<StyledText
-												variant="semibold"
-												className="text-white text-lg ml-2"
-											>
-												Sync GitHub Commits
-											</StyledText>
-										</>
-									)}
-								</TouchableOpacity>
-							</>
-						) : (
+						{!isGitHubUser && (
 							<>
 								<StyledText className="text-6xl mb-4">🔗</StyledText>
 								<StyledText
