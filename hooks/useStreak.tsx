@@ -1,6 +1,6 @@
+import { useEffect } from "react";
 import { useCommitStore } from "@/store/CommitStore";
 import { DailyCommit, StreakData } from "@/types/Commit.types";
-import { useEffect } from "react";
 
 export const useStreak = () => {
     const { commits, setStreakData } = useCommitStore();
@@ -14,20 +14,16 @@ export const useStreak = () => {
             };
         }
 
-        // Sort commits by date (newest first)
         const sortedCommits = [...commits].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        // Get unique dates (in case multiple commits per day)
         const uniqueDates = Array.from(new Set(sortedCommits.map((c) => c.date)));
 
-        // Calculate current streak
         let currentStreak = 0;
         const today = new Date().toISOString().split("T")[0];
         const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
-        // Start checking from today or yesterday
         const startDate = uniqueDates[0] === today || uniqueDates[0] === yesterday 
             ? uniqueDates[0] 
             : null;
@@ -43,7 +39,7 @@ export const useStreak = () => {
                 if (uniqueDates[i] === expectedDateString) {
                     currentStreak++;
                 } else {
-                    break; // Streak broken
+                    break;
                 }
             }
         }

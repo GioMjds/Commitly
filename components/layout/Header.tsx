@@ -123,6 +123,17 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 												</StyledText>
 											</View>
 
+											{/* Settings Button */}
+											<TouchableOpacity
+												onPress={() => router.push("/(screens)/settings")}
+												className="flex-row items-center px-4 py-3 active:bg-gray-100"
+											>
+												<Ionicons name="settings-outline" size={20} color="#4b5563" />
+												<StyledText variant="medium" className="text-primary ml-3">
+													Settings
+												</StyledText>
+											</TouchableOpacity>
+
 											{/* Logout Button */}
 											<TouchableOpacity
 												onPress={handleLogout}

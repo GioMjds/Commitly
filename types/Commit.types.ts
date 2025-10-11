@@ -18,6 +18,13 @@ export interface DailyCommit {
     updatedAt: Date;
     date: string; // YYYY-MM-DD format for easy querying
     githubCommits?: GitHubCommitDetail[]; // GitHub commit details if synced from GitHub
+    // Manual commit fields (note-taking system)
+    title?: string;
+    timeSpent?: number; // in minutes
+    timeUnit?: 'minutes' | 'hours' | 'days';
+    difficulty?: 'easy' | 'medium' | 'hard';
+    description?: string;
+    tags?: string[]; // array of tags
 }
 
 export interface StreakData {
@@ -38,4 +45,9 @@ export interface CommitFormData {
     note: string;
     tag?: string;
     mood?: MoodType;
+    title?: string;
+    timeSpent?: number;
+    timeUnit?: 'minutes' | 'hours' | 'days';
+    difficulty?: 'easy' | 'medium' | 'hard';
+    description?: string;
 }

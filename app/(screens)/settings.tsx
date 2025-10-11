@@ -8,26 +8,26 @@ import { useAuthStore } from '@/store/AuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    ScrollView,
-    Switch,
-    TouchableOpacity,
-    View,
+	ActivityIndicator,
+	ScrollView,
+	Switch,
+	TouchableOpacity,
+	View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
-	const { user } = useAuthStore();
-	const { syncSettings, updateSyncSettings, syncGithubCommits, loading } = useGithubCommits();
-    const { fetchCommits } = useCommit();
-	const { linkGithubAccount } = useGithubAuth();
-
 	const [alertVisible, setAlertVisible] = useState<boolean>(false);
 	const [alertConfig, setAlertConfig] = useState({
 		title: '',
 		message: '',
 		icon: 'checkmark-circle-outline' as keyof typeof Ionicons.glyphMap,
 	});
+
+	const { user } = useAuthStore();
+	const { syncSettings, updateSyncSettings, syncGithubCommits, loading } = useGithubCommits();
+    const { fetchCommits } = useCommit();
+	const { linkGithubAccount } = useGithubAuth();
 
 	// Check if user has GitHub provider
 	const isGitHubUser = user?.providerData?.some(
@@ -76,9 +76,7 @@ export default function SettingsScreen() {
         const result = await syncGithubCommits();
 
         // ✅ Always refresh commits after sync (whether auto-create is on or not)
-        if (result.success) {
-            await fetchCommits();
-        }
+        if (result.success) await fetchCommits();
 
         setAlertConfig({
             title: result.success ? 'Success' : 'Error',
@@ -111,7 +109,6 @@ export default function SettingsScreen() {
 		<SafeAreaView className="flex-1 bg-neutral">
 			<ScrollView className="flex-1 px-6 py-6">
 				<Header title="Settings" subtitle="Customize your experience" />
-
 				{/* GitHub Integration Section */}
 				<View className="mb-6">
 					<StyledText

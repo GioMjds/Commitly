@@ -9,9 +9,11 @@ interface CommitCardProps {
 }
 
 export default function CommitCard({ commit }: CommitCardProps) {
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState<boolean>(false);
+
     const isGitHubSync = commit.tag === 'github-sync';
     const hasGitHubCommits = commit.githubCommits && commit.githubCommits.length > 0;
+    const isManualCommit = commit.title || commit.timeSpent || commit.difficulty || commit.description || (commit.tags && commit.tags.length > 0);
 
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString("en-US", {
@@ -27,6 +29,41 @@ export default function CommitCard({ commit }: CommitCardProps) {
             hour: "2-digit",
             minute: "2-digit",
         });
+    };
+
+    const formatTimeSpent = (minutes: number) => {
+        if (minutes < 60) {
+            return `${minutes}m`;
+        }
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    };
+
+    const getDifficultyColor = (difficulty: string) => {
+        switch (difficulty) {
+            case 'easy':
+                return 'bg-green-500';
+            case 'medium':
+                return 'bg-yellow-500';
+            case 'hard':
+                return 'bg-red-500';
+            default:
+                return 'bg-gray-300';
+        }
+    };
+
+    const getDifficultyIcon = (difficulty: string) => {
+        switch (difficulty) {
+            case 'easy':
+                return '😊';
+            case 'medium':
+                return '😐';
+            case 'hard':
+                return '😰';
+            default:
+                return '';
+        }
     };
 
     const openGitHubUrl = (url: string) => {
@@ -45,8 +82,13 @@ export default function CommitCard({ commit }: CommitCardProps) {
                         {isGitHubSync && (
                             <View className="bg-action/10 px-2 py-1 rounded-md flex-row items-center gap-1">
                                 <Ionicons name="logo-github" size={12} color="#7C3AED" />
-                                <StyledText variant="medium" className="text-action text-xs">
-                                    GitHub
+                            </View>
+                        )}
+                        {isManualCommit && !isGitHubSync && (
+                            <View className="bg-secondary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
+                                <Ionicons name="create" size={12} color="#0EA5A4" />
+                                <StyledText variant="medium" className="text-secondary text-xs">
+                                    Manual
                                 </StyledText>
                             </View>
                         )}
@@ -56,6 +98,63 @@ export default function CommitCard({ commit }: CommitCardProps) {
                     </StyledText>
                 </View>
             </View>
+
+            {/* Manual Commit Details */}
+            {isManualCommit && (
+                <View className="mb-3 bg-neutral/50 p-4 rounded-xl">
+                    {/* Title */}
+                    {commit.title && (
+                        <StyledText variant="semibold" className="text-primary text-xl mb-2">
+                            {commit.title}
+                        </StyledText>
+                    )}
+
+                    {/* Time Spent & Difficulty */}
+                    <View className="flex-row items-center gap-3 mb-3">
+                        {commit.timeSpent && (
+                            <View className="flex-row items-center gap-1 bg-action/10 px-3 py-1.5 rounded-full">
+                                <Ionicons name="time" size={14} color="#7C3AED" />
+                                <StyledText variant="medium" className="text-action text-sm">
+                                    {formatTimeSpent(commit.timeSpent)}
+                                </StyledText>
+                            </View>
+                        )}
+                        {commit.difficulty && (
+                            <View className={`flex-row items-center gap-1 px-3 py-1.5 rounded-full ${getDifficultyColor(commit.difficulty)}/10`}>
+                                <StyledText className="text-base">
+                                    {getDifficultyIcon(commit.difficulty)}
+                                </StyledText>
+                                <StyledText variant="medium" className="text-sm capitalize" style={{ color: commit.difficulty === 'easy' ? '#22c55e' : commit.difficulty === 'medium' ? '#eab308' : '#ef4444' }}>
+                                    {commit.difficulty}
+                                </StyledText>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Description */}
+                    {commit.description && (
+                        <StyledText variant="regular" className="text-primary/80 text-base mb-3 leading-6">
+                            {commit.description}
+                        </StyledText>
+                    )}
+
+                    {/* Tags */}
+                    {commit.tags && commit.tags.length > 0 && (
+                        <View className="flex-row flex-wrap gap-2">
+                            {commit.tags.map((tag, index) => (
+                                <View
+                                    key={index}
+                                    className="bg-action/10 px-2.5 py-1 rounded-full"
+                                >
+                                    <StyledText variant="medium" className="text-action text-xs">
+                                        #{tag}
+                                    </StyledText>
+                                </View>
+                            ))}
+                        </View>
+                    )}
+                </View>
+            )}
 
             {/* GitHub Commits Details */}
             {hasGitHubCommits && (

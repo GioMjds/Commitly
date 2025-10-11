@@ -57,13 +57,16 @@ export const useCommit = () => {
         setLoading(true);
         try {
             const now = new Date();
-            const dateString = now.toISOString().split("T")[0]; // YYYY-MM-DD
+            const dateString = now.toISOString().split("T")[0];
 
             const commitData = {
                 userId: user.uid,
                 note: data.note,
-                tag: data.tag || undefined,
-                mood: data.mood || undefined,
+                title: data.title || undefined,
+                timeSpent: data.timeSpent || undefined,
+                timeUnit: data.timeUnit || undefined,
+                difficulty: data.difficulty || undefined,
+                description: data.description || undefined,
                 createdAt: now,
                 updatedAt: now,
                 date: dateString,
@@ -103,6 +106,11 @@ export const useCommit = () => {
                 note: data.note,
                 tag: data.tag || undefined,
                 mood: data.mood || undefined,
+                title: data.title || undefined,
+                timeSpent: data.timeSpent || undefined,
+                timeUnit: data.timeUnit || undefined,
+                difficulty: data.difficulty || undefined,
+                description: data.description || undefined,
                 updatedAt: now,
             };
 

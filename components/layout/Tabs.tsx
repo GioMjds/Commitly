@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
 import React from 'react';
 import { Platform, TouchableOpacity, View } from 'react-native';
 import StyledText from '../ui/StyledText';
@@ -8,10 +9,8 @@ import StyledText from '../ui/StyledText';
 type IconName =
 	| 'home'
 	| 'list'
-	| 'settings'
 	| 'home-outline'
-	| 'list-outline'
-	| 'settings-outline';
+	| 'list-outline';
 
 interface TabConfig {
 	name: string;
@@ -33,12 +32,6 @@ const TAB_CONFIG: Record<string, TabConfig> = {
 		icon: 'list',
 		iconOutline: 'list-outline',
 	},
-	settings: {
-		name: 'settings',
-		label: 'Settings',
-		icon: 'settings',
-		iconOutline: 'settings-outline',
-	}
 };
 
 export default function CustomTabBar({
@@ -46,6 +39,13 @@ export default function CustomTabBar({
 	descriptors,
 	navigation,
 }: BottomTabBarProps) {
+	const handleAddPress = () => {
+		if (Platform.OS === 'ios') {
+			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+		}
+		router.push('/(add)/add-commit');
+	};
+
 	return (
 		<View
 			className="bg-white border-t border-gray-200"
@@ -76,7 +76,6 @@ export default function CustomTabBar({
 						});
 
 						if (!isFocused && !event.defaultPrevented) {
-							// Haptic feedback on tab press
 							if (Platform.OS === 'ios') {
 								Haptics.impactAsync(
 									Haptics.ImpactFeedbackStyle.Light
@@ -94,43 +93,61 @@ export default function CustomTabBar({
 					};
 
 					return (
-						<TouchableOpacity
-							key={route.key}
-							accessibilityRole="button"
-							accessibilityState={
-								isFocused ? { selected: true } : {}
-							}
-							accessibilityLabel={
-								options.tabBarAccessibilityLabel
-							}
-							onPress={onPress}
-							onLongPress={onLongPress}
-							className="flex-1 items-center justify-center py-2"
-						>
-							<View
-								className={`items-center justify-center p-4 rounded-full`}
+						<>
+							<TouchableOpacity
+								accessibilityRole="button"
+								accessibilityState={
+									isFocused ? { selected: true } : {}
+								}
+								accessibilityLabel={
+									options.tabBarAccessibilityLabel
+								}
+								onPress={onPress}
+								onLongPress={onLongPress}
+								className="flex-1 items-center justify-center py-2"
 							>
-								<Ionicons
-									name={
-										isFocused
-											? tabConfig.icon
-											: tabConfig.iconOutline
-									}
-									size={24}
-									color={isFocused ? '#7C3AED' : '#94a3b8'}
-								/>
-								<StyledText
-									variant={isFocused ? 'semibold' : 'medium'}
-									className={`text-md mt-1 ${
-										isFocused
-											? 'text-action'
-											: 'text-gray-500'
-									}`}
+								<View
+									className={`items-center justify-center p-4 rounded-full`}
 								>
-									{tabConfig.label}
-								</StyledText>
-							</View>
-						</TouchableOpacity>
+									<Ionicons
+										name={
+											isFocused
+												? tabConfig.icon
+												: tabConfig.iconOutline
+										}
+										size={24}
+										color={isFocused ? '#7C3AED' : '#94a3b8'}
+									/>
+									<StyledText
+										variant={isFocused ? 'semibold' : 'medium'}
+										className={`text-md mt-1 ${
+											isFocused
+												? 'text-action'
+												: 'text-gray-500'
+										}`}
+									>
+										{tabConfig.label}
+									</StyledText>
+								</View>
+							</TouchableOpacity>
+
+							{/* Center Add Button after first tab */}
+							{index === 0 && (
+								<TouchableOpacity
+									onPress={handleAddPress}
+									accessibilityRole="button"
+									accessibilityLabel="Add new commit"
+									className="flex-1 items-center justify-center py-2"
+								>
+									<View className="bg-action rounded-full w-16 h-16 items-center justify-center">
+										<Ionicons name="add-circle" size={45} color="#ffffff" />
+									</View>
+									<StyledText className="text-md mt-1" variant='semibold'>
+										Add Commit
+									</StyledText>
+								</TouchableOpacity>
+							)}
+						</>
 					);
 				})}
 			</View>

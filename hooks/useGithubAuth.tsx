@@ -1,13 +1,13 @@
 import { auth, database } from "@/configs/firebase";
 import { useAuthStore } from "@/store/AuthStore";
-import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
 import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import { GithubAuthProvider, linkWithCredential, signInWithCredential, updateProfile } from "firebase/auth";
 import { ref, set } from "firebase/database";
-import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
 
 WebBrowser.maybeCompleteAuthSession();
 

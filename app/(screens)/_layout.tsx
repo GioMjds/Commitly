@@ -1,19 +1,8 @@
 import CustomTabBar from "@/components/layout/Tabs";
-import { useAuthStore } from "@/store/AuthStore";
-import { Redirect, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 export default function ScreensLayout() {
-    const { user, loading } = useAuthStore();
-
-    if (loading) {
-        return null;
-    }
-
-    if (!user) {
-        return <Redirect href="/(auth)/login" />;
-    }
-
     return (
         <>
             <StatusBar style="dark" />
@@ -38,7 +27,7 @@ export default function ScreensLayout() {
                 <Tabs.Screen
                     name="settings"
                     options={{
-                        title: "Settings",
+                        href: null,
                     }}
                 />
             </Tabs>

@@ -15,6 +15,10 @@ const queryClient = new QueryClient();
 
 SplashScreen.preventAutoHideAsync();
 
+export const unstable_settings = {
+    initialRouteName: "(auth)",
+};
+
 export default function RootLayout() {
 	const { setUser, setLoading } = useAuthStore();
 
@@ -53,7 +57,11 @@ export default function RootLayout() {
 		<QueryClientProvider client={queryClient}>
 			<SafeAreaProvider>
 				<StatusBar style="auto" />
-				<Stack screenOptions={{ headerShown: false }} />
+				<Stack>
+                    <Stack.Screen name="(auth)" options={{ headerShown: false, animation: 'ios_from_right' }} />
+                    <Stack.Screen name="(add)" options={{ headerShown: false, animation: 'ios_from_right' }} />
+                    <Stack.Screen name="(screens)" options={{ headerShown: false, animation: 'ios_from_right' }} />
+                </Stack>
 			</SafeAreaProvider>
 		</QueryClientProvider>
 	);

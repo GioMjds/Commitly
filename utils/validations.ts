@@ -33,6 +33,15 @@ export const forgotPasswordSchema = z.object({
     email: emailSchema,
 });
 
+export const commitSchema = z.object({
+    title: z.string().min(1, "Title is required").trim(),
+    timeSpent: z.number().positive().optional().or(z.literal(undefined)),
+    timeUnit: z.enum(['minutes', 'hours', 'days']).optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+    description: z.string().min(1, "Description is required").trim(),
+});
+
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type RegisterSchema = z.infer<typeof registerSchema>;
 export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
+export type CommitFormSchema = z.infer<typeof commitSchema>;

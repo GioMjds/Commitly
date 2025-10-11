@@ -2,6 +2,7 @@ import Header from "@/components/layout/Header";
 import CommitCard from "@/components/ui/CommitCard";
 import StyledText from "@/components/ui/StyledText";
 import { useCommit } from "@/hooks/useCommit";
+import { useGithubCommits } from "@/hooks/useGithubCommits";
 import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +15,7 @@ export default function HistoryScreen() {
     const { user } = useAuthStore();
     const { commits, loading } = useCommitStore();
     const { fetchCommits } = useCommit();
+    const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
     const [refreshing, setRefreshing] = useState(false);
 
     const isGitHubUser = user?.providerData?.some(
@@ -22,10 +24,7 @@ export default function HistoryScreen() {
 
     useFocusEffect(
         useCallback(() => {
-            if (user) {
-                console.log('Fetching commits in history for user:', user.uid);
-                fetchCommits();
-            }
+            if (user) fetchCommits();
         }, [user, fetchCommits])
     );
 
@@ -36,6 +35,13 @@ export default function HistoryScreen() {
         await fetchCommits();
         setRefreshing(false);
     }, [user, fetchCommits]);
+
+    const handleSyncNow = async () => {
+        if (!isGitHubUser) return;
+        const result = await syncGithubCommits();
+
+        if (result.success) await fetchCommits();
+    };
 
     const renderEmpty = () => (
         <View className="items-center py-20">
@@ -93,10 +99,15 @@ export default function HistoryScreen() {
     return (
         <SafeAreaView className="flex-1 bg-neutral">
             <View className="flex-1 px-6 py-6">
-                <Header 
-                    title="History" 
-                    subtitle="Your journey of continuous improvement" 
-                />
+                {/* Header */}
+                <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-1">
+                        <Header 
+                            title="History" 
+                            subtitle="Your journey of continuous improvement" 
+                        />
+                    </View>
+                </View>
 
                 <FlatList
                     data={commits}
@@ -118,6 +129,35 @@ export default function HistoryScreen() {
                         />
                     }
                 />
+
+                {/* Floating Sync Button */}
+                {isGitHubUser && (
+                    <TouchableOpacity
+                        onPress={handleSyncNow}
+                        disabled={syncLoading || loading}
+                        className={`absolute bottom-6 right-6 rounded-full p-4 shadow-lg flex-row items-center ${
+                            syncLoading ? 'bg-gray-400' : 'bg-action'
+                        }`}
+                        style={{
+                            elevation: 5,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 3.84,
+                        }}
+                    >
+                        {syncLoading ? (
+                            <ActivityIndicator size="small" color="#E6EEF2" />
+                        ) : (
+                            <>
+                                <Ionicons name="sync" size={24} color="#E6EEF2" />
+                                <StyledText className="ml-2 text-neutral" variant="medium">
+                                    Sync Latest Commit
+                                </StyledText>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                )}
             </View>
         </SafeAreaView>
     );
