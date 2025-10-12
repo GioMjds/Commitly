@@ -1,14 +1,16 @@
-import { View, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import StyledText from '@/components/ui/StyledText';
-import { Link, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '@/store/AuthStore';
 import { auth } from '@/configs/firebase';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useAuthStore } from '@/store/AuthStore';
+import { Ionicons } from '@expo/vector-icons';
+import { Link, router } from 'expo-router';
 import { sendEmailVerification } from 'firebase/auth';
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function VerifyScreen() {
 	const { user, setLoading } = useAuthStore();
+	const { colors } = useThemedStyles();
 
 	const checkEmailVerification = async () => {
         try {
@@ -54,10 +56,10 @@ export default function VerifyScreen() {
 	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-neutral">
-			<View className="flex-1 px-6 justify-center items-center">
-				<View className="items-center mb-10">
-					<View className="bg-secondary/20 p-6 rounded-full mb-6">
+		<SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
+			<View style={styles.content}>
+				<View style={styles.iconSection}>
+					<View style={[styles.iconContainer, { backgroundColor: colors.actionOpacity20 }]}>
 						<Ionicons
 							name="mail-outline"
 							size={60}
@@ -67,65 +69,65 @@ export default function VerifyScreen() {
 
 					<StyledText
 						variant="black"
-						className="text-5xl text-primary mb-4 text-center"
+						style={[styles.title, { color: colors.text }]}
 					>
 						Verify Your Email
 					</StyledText>
 
 					<StyledText
 						variant="light"
-						className="text-2xl text-primary opacity-70 text-center mb-2"
+						style={[styles.subtitle, { color: colors.text }]}
 					>
 						We&apos;ve sent a verification link to
 					</StyledText>
 
 					<StyledText
 						variant="semibold"
-						className="text-xl underline text-primary text-center mb-6"
+						style={[styles.email, { color: colors.text }]}
 					>
 						{user?.email}
 					</StyledText>
 
 					<StyledText
 						variant="regular"
-						className="text-lg text-primary/70 text-center"
+						style={[styles.description, { color: colors.textSecondary }]}
 					>
 						Please check your inbox and click the verification link
 						to activate your account.
 					</StyledText>
 				</View>
 
-				<View className="w-full space-y-4">
+				<View style={styles.buttonContainer}>
 					<TouchableOpacity
-						className="bg-action rounded-2xl py-4 mb-2 items-center shadow-lg shadow-action/30"
+						style={styles.verifyButton}
 						onPress={checkEmailVerification}
 					>
 						<StyledText
 							variant="semibold"
-							className="text-white text-lg"
+							style={styles.verifyButtonText}
 						>
 							I&apos;ve Verified My Email
 						</StyledText>
 					</TouchableOpacity>
 
 					<TouchableOpacity
-						className="border border-secondary rounded-2xl py-4 items-center"
+						style={[styles.resendButton, { borderColor: colors.secondary }]}
 						onPress={handleResendVerification}
 					>
 						<StyledText
 							variant="semibold"
-							className="text-secondary text-lg"
+							style={styles.resendButtonText}
 						>
 							Resend Verification Email
 						</StyledText>
 					</TouchableOpacity>
 
-					<View className="flex-row justify-center items-center mt-4">
+					<View style={styles.backToSignIn}>
 						<Link href="/login" asChild>
 							<TouchableOpacity>
 								<StyledText
 									variant="medium"
-									className="text-primary/70 text-lg"
+									style={[styles.backToSignInText, { color: colors.textSecondary }]}
 								>
 									Back to Sign In
 								</StyledText>
@@ -137,3 +139,84 @@ export default function VerifyScreen() {
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	content: {
+		flex: 1,
+		paddingHorizontal: 24,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	iconSection: {
+		alignItems: 'center',
+		marginBottom: 40,
+	},
+	iconContainer: {
+		padding: 24,
+		borderRadius: 9999,
+		marginBottom: 24,
+	},
+	title: {
+		fontSize: 40,
+		marginBottom: 16,
+		textAlign: 'center',
+	},
+	subtitle: {
+		fontSize: 24,
+		opacity: 0.7,
+		textAlign: 'center',
+		marginBottom: 8,
+	},
+	email: {
+		fontSize: 20,
+		textDecorationLine: 'underline',
+		textAlign: 'center',
+		marginBottom: 24,
+	},
+	description: {
+		fontSize: 18,
+		textAlign: 'center',
+	},
+	buttonContainer: {
+		width: '100%',
+		gap: 16,
+	},
+	verifyButton: {
+		backgroundColor: '#7C3AED',
+		borderRadius: 16,
+		paddingVertical: 16,
+		marginBottom: 8,
+		alignItems: 'center',
+		shadowColor: '#7C3AED',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	verifyButtonText: {
+		color: '#FFFFFF',
+		fontSize: 18,
+	},
+	resendButton: {
+		borderWidth: 2,
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+	},
+	resendButtonText: {
+		color: '#0EA5A4',
+		fontSize: 18,
+	},
+	backToSignIn: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginTop: 16,
+	},
+	backToSignInText: {
+		fontSize: 18,
+	},
+});

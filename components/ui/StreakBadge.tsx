@@ -2,7 +2,7 @@ import StyledText from '@/components/ui/StyledText';
 import { DashboardStats } from '@/types/Commit.types';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type StreakBadgeProps = {
 	stats: DashboardStats;
@@ -20,19 +20,19 @@ export default function StreakBadge({ stats }: StreakBadgeProps) {
 	}, [currentStreak, prevStreak]);
 
 	return (
-		<View className="flex-col gap-4 mb-4">
+		<View style={styles.container}>
 			{/* Big Streak Badge */}
-			<View className="bg-indigo-600 rounded-3xl p-6 shadow-lg">
-				<View className="inline">
+			<View style={styles.totalCommitsCard}>
+				<View>
 					<StyledText
 						variant="black"
-						className="text-neutral text-9xl"
+						style={styles.totalCommitsNumber}
 					>
 						{totalCommits}
 					</StyledText>
 					<StyledText
 						variant="medium"
-						className="text-neutral text-2xl mt-1"
+						style={styles.totalCommitsLabel}
 					>
 						Total Commits
 					</StyledText>
@@ -40,21 +40,21 @@ export default function StreakBadge({ stats }: StreakBadgeProps) {
 			</View>
 
 			{/* Cards */}
-			<View className="flex-row flex-1 items-center justify-center gap-4">
+			<View style={styles.streaksRow}>
 				{/* Current Streak */}
-				<View className="flex-1 bg-orange-600 rounded-3xl p-6 shadow-lg">
-					<View className="flex-1">
-						<View className="flex-row items-center">
+				<View style={styles.currentStreakCard}>
+					<View style={styles.cardContent}>
+						<View style={styles.numberRow}>
 							<StyledText
 								variant="extrabold"
-								className="text-neutral text-5xl mr-2"
+								style={styles.streakNumber}
 							>
 								{currentStreak}
 							</StyledText>
 						</View>
 						<StyledText
 							variant="medium"
-							className="text-neutral text-xl mt-2"
+							style={styles.streakLabel}
 						>
 							Current Streak
 						</StyledText>
@@ -62,19 +62,19 @@ export default function StreakBadge({ stats }: StreakBadgeProps) {
 				</View>
 
 				{/* Best Streak */}
-				<View className="flex-1 bg-secondary rounded-3xl p-6 shadow-lg">
-					<View className="flex-1">
-						<View className="flex-row items-center">
+				<View style={styles.bestStreakCard}>
+					<View style={styles.cardContent}>
+						<View style={styles.numberRow}>
 							<StyledText
 								variant="extrabold"
-								className="text-neutral text-5xl mr-2"
+								style={styles.streakNumber}
 							>
 								{longestStreak}
 							</StyledText>
 						</View>
 						<StyledText
 							variant="medium"
-							className="text-neutral text-xl mt-2"
+							style={styles.streakLabel}
 						>
 							Best Streak
 						</StyledText>
@@ -84,3 +84,76 @@ export default function StreakBadge({ stats }: StreakBadgeProps) {
 		</View>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flexDirection: 'column',
+		gap: 16,
+		marginBottom: 16,
+	},
+	totalCommitsCard: {
+		backgroundColor: '#4f46e5',
+		borderRadius: 24,
+		padding: 24,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	totalCommitsNumber: {
+		color: '#FAFAFA',
+		fontSize: 72,
+	},
+	totalCommitsLabel: {
+		color: '#FAFAFA',
+		fontSize: 24,
+		marginTop: 4,
+	},
+	streaksRow: {
+		flexDirection: 'row',
+		flex: 1,
+		alignItems: 'center',
+		justifyContent: 'center',
+		gap: 16,
+	},
+	currentStreakCard: {
+		flex: 1,
+		backgroundColor: '#ea580c',
+		borderRadius: 24,
+		padding: 24,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	bestStreakCard: {
+		flex: 1,
+		backgroundColor: '#0EA5A4',
+		borderRadius: 24,
+		padding: 24,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	cardContent: {
+		flex: 1,
+	},
+	numberRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	streakNumber: {
+		color: '#FAFAFA',
+		fontSize: 48,
+		marginRight: 8,
+	},
+	streakLabel: {
+		color: '#FAFAFA',
+		fontSize: 20,
+		marginTop: 8,
+	},
+});

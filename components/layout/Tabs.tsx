@@ -1,9 +1,10 @@
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
-import { Platform, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import StyledText from '../ui/StyledText';
 
 type IconName =
@@ -39,6 +40,8 @@ export default function CustomTabBar({
 	descriptors,
 	navigation,
 }: BottomTabBarProps) {
+	const { colors } = useThemedStyles();
+
 	const handleAddPress = () => {
 		if (Platform.OS === 'ios') {
 			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -48,17 +51,15 @@ export default function CustomTabBar({
 
 	return (
 		<View
-			className="bg-white border-t border-gray-200"
-			style={{
-				paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-				shadowColor: '#000',
-				shadowOffset: { width: 0, height: -2 },
-				shadowOpacity: 0.05,
-				shadowRadius: 8,
-				elevation: 8,
-			}}
+			style={[
+				styles.tabBarContainer,
+				{
+					backgroundColor: colors.surface,
+					borderTopColor: colors.border,
+				}
+			]}
 		>
-			<View className="flex-row justify-around items-center px-4 pt-2">
+			<View style={styles.tabBarContent}>
 				{state.routes.map((route, index) => {
 					const { options } = descriptors[route.key];
 					const isFocused = state.index === index;
@@ -93,7 +94,7 @@ export default function CustomTabBar({
 					};
 
 					return (
-						<>
+						<React.Fragment key={route.key}>
 							<TouchableOpacity
 								accessibilityRole="button"
 								accessibilityState={
@@ -104,11 +105,9 @@ export default function CustomTabBar({
 								}
 								onPress={onPress}
 								onLongPress={onLongPress}
-								className="flex-1 items-center justify-center py-2"
+								style={styles.tabButton}
 							>
-								<View
-									className={`items-center justify-center p-4 rounded-full`}
-								>
+								<View style={styles.tabContent}>
 									<Ionicons
 										name={
 											isFocused
@@ -120,11 +119,10 @@ export default function CustomTabBar({
 									/>
 									<StyledText
 										variant={isFocused ? 'semibold' : 'medium'}
-										className={`text-md mt-1 ${
-											isFocused
-												? 'text-action'
-												: 'text-gray-500'
-										}`}
+										style={[
+											styles.tabLabel,
+											{ color: isFocused ? '#7C3AED' : '#6b7280' }
+										]}
 									>
 										{tabConfig.label}
 									</StyledText>
@@ -137,20 +135,70 @@ export default function CustomTabBar({
 									onPress={handleAddPress}
 									accessibilityRole="button"
 									accessibilityLabel="Add new commit"
-									className="flex-1 items-center justify-center py-2"
+									style={styles.tabButton}
 								>
-									<View className="bg-action rounded-full w-16 h-16 items-center justify-center">
+									<View style={styles.addButton}>
 										<Ionicons name="add-circle" size={45} color="#ffffff" />
 									</View>
-									<StyledText className="text-md mt-1" variant='semibold'>
+									<StyledText 
+										style={[styles.addButtonLabel, { color: colors.text }]} 
+										variant='semibold'
+									>
 										Add Commit
 									</StyledText>
 								</TouchableOpacity>
 							)}
-						</>
+						</React.Fragment>
 					);
 				})}
 			</View>
 		</View>
 	);
 }
+
+const styles = StyleSheet.create({
+	tabBarContainer: {
+		borderTopWidth: 1,
+		paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	tabBarContent: {
+		flexDirection: 'row',
+		justifyContent: 'space-around',
+		alignItems: 'center',
+		paddingHorizontal: 16,
+		paddingTop: 8,
+	},
+	tabButton: {
+		flex: 1,
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingVertical: 8,
+	},
+	tabContent: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		padding: 16,
+		borderRadius: 9999,
+	},
+	tabLabel: {
+		fontSize: 16,
+		marginTop: 4,
+	},
+	addButton: {
+		backgroundColor: '#7C3AED',
+		borderRadius: 9999,
+		width: 64,
+		height: 64,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	addButtonLabel: {
+		fontSize: 16,
+		marginTop: 4,
+	},
+});

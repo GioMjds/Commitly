@@ -1,0 +1,1 @@
+export type DateRange = 'all' | 'week' | 'month' | 'year';

@@ -1,15 +1,17 @@
-import * as SplashScreen from 'expo-splash-screen';
-import * as SystemUI from 'expo-system-ui';
-import "../global.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from 'expo-router';
-import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/configs/firebase";
+import { useTheme } from "@/hooks/useTheme";
 import { useAuthStore } from "@/store/AuthStore";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from "expo-status-bar";
+import * as SystemUI from 'expo-system-ui';
+import { onAuthStateChanged } from "firebase/auth";
+import { useEffect } from "react";
+import { View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import "../global.css";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,7 @@ export const unstable_settings = {
 
 export default function RootLayout() {
 	const { setUser, setLoading } = useAuthStore();
+	const { activeTheme } = useTheme();
 
 	const [fontsLoaded] = useFonts({
 		'HubotSans-Black': require("@/assets/fonts/HubotSans-Black.ttf"),
@@ -53,16 +56,30 @@ export default function RootLayout() {
         return unsubscribe;
     }, [setUser, setLoading, fontsLoaded]);
 	
+	useEffect(() => {
+		console.log(`[RootLayout] 🎨 Active theme changed to: ${activeTheme}`);
+		console.log(`[RootLayout] 🎯 Applying dark mode: ${activeTheme === 'dark'}`);
+		
+		// Update system UI background based on theme
+		if (activeTheme === 'dark') {
+			SystemUI.setBackgroundColorAsync('#0B1220');
+		} else {
+			SystemUI.setBackgroundColorAsync('#F8FAFC');
+		}
+	}, [activeTheme]);
+
 	return (
 		<QueryClientProvider client={queryClient}>
-			<SafeAreaProvider>
-				<StatusBar style="auto" />
-				<Stack>
-                    <Stack.Screen name="(auth)" options={{ headerShown: false, animation: 'ios_from_right' }} />
-                    <Stack.Screen name="(add)" options={{ headerShown: false, animation: 'ios_from_right' }} />
-                    <Stack.Screen name="(screens)" options={{ headerShown: false, animation: 'ios_from_right' }} />
-                </Stack>
-			</SafeAreaProvider>
+			<View className={activeTheme === 'dark' ? 'dark flex-1' : 'flex-1'} style={{ flex: 1 }}>
+				<SafeAreaProvider>
+					<StatusBar style={activeTheme === 'dark' ? 'light' : 'auto'} />
+					<Stack>
+						<Stack.Screen name="(auth)" options={{ headerShown: false, animation: 'fade' }} />
+						<Stack.Screen name="(add)" options={{ headerShown: false, animation: 'fade' }} />
+						<Stack.Screen name="(screens)" options={{ headerShown: false, animation: 'fade' }} />
+					</Stack>
+				</SafeAreaProvider>
+			</View>
 		</QueryClientProvider>
 	);
 }

@@ -31,7 +31,6 @@ export const useCommit = () => {
         loadPendingOperations
     } = useCommitStore();
 
-    // Load pending operations on mount
     useEffect(() => {
         loadPendingOperations();
     }, [loadPendingOperations]);
@@ -41,21 +40,19 @@ export const useCommit = () => {
             try {
                 if (operation.operation === 'create') {
                     const docRef = await addDoc(collection(firestore, "commits"), operation.data);
-                    // Update the optimistic commit with real ID
                     updateCommit(operation.id, { id: docRef.id });
                 } else if (operation.operation === 'update') {
                     await updateDoc(doc(firestore, "commits", operation.id), operation.data);
                 } else if (operation.operation === 'delete') {
                     await deleteDoc(doc(firestore, "commits", operation.id));
                 }
-                await removePendingOperation(operation.id);
+                removePendingOperation(operation.id);
             } catch (error) {
                 console.error('Failed to process pending operation:', error);
             }
         }
     }, [pendingOperations, removePendingOperation, updateCommit]);
 
-    // Process pending operations when online
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
             if (state.isConnected && pendingOperations.length > 0) {

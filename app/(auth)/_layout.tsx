@@ -1,9 +1,11 @@
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { useAuthStore } from "@/store/AuthStore";
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 export default function AuthLayout() {
     const { user } = useAuthStore();
+    const { isDark } = useThemedStyles();
 
     const isGitHubUser = user?.providerData?.some(
         provider => provider.providerId === 'github.com'
@@ -15,7 +17,7 @@ export default function AuthLayout() {
 
     return (
         <>
-            <StatusBar style="dark" />
+            <StatusBar style={isDark ? 'light' : 'dark'} />
             <Stack screenOptions={{ headerShown: false }} />
         </>
     )

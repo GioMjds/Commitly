@@ -12,15 +12,15 @@ export default function StatsOverview({ stats }: Props) {
         <View className="mb-6">
             <StyledText
                 variant="semibold"
-                className="text-primary text-xl mb-3"
+                className="text-primary dark:text-text-dark text-xl mb-3"
             >
                 Your Stats
             </StyledText>
-            <View className="bg-white rounded-2xl p-5 shadow-md">
-                <View className="flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200">
+            <View className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-md">
+                <View className="flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-border-dark">
                     <StyledText
                         variant="medium"
-                        className="text-primary/70"
+                        className="text-primary/70 dark:text-muted-dark"
                     >
                         Total Commits
                     </StyledText>
@@ -35,7 +35,7 @@ export default function StatsOverview({ stats }: Props) {
                     <View className="flex-1">
                         <StyledText
                             variant="medium"
-                            className="text-primary/70 mb-1"
+                            className="text-primary/70 dark:text-muted-dark mb-1"
                         >
                             Current Streak
                         </StyledText>
@@ -54,7 +54,7 @@ export default function StatsOverview({ stats }: Props) {
                     <View className="flex-1 items-end">
                         <StyledText
                             variant="medium"
-                            className="text-primary/70 mb-1"
+                            className="text-primary/70 dark:text-muted-dark mb-1"
                         >
                             Best Streak
                         </StyledText>

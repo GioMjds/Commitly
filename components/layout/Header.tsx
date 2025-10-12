@@ -2,12 +2,13 @@ import Alert from '@/components/ui/Alert';
 import StyledText from '@/components/ui/StyledText';
 import { database } from '@/configs/firebase';
 import { useAuth } from '@/hooks/useAuth';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from '@/store/AuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ref as dbRef, onValue } from 'firebase/database';
 import React, { useEffect, useState } from 'react';
-import { Image, Modal, Pressable, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface HeaderProps {
 	title: string;
@@ -21,9 +22,10 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 	const [errorAlertVisible, setErrorAlertVisible] = useState<boolean>(false);
 	const [errorMessage, setErrorMessage] = useState<string>('');
 	const [githubInfo, setGithubInfo] = useState<{ username?: string; avatarUrl?: string; name?: string } | null>(null);
-	
+
 	const { user } = useAuthStore();
 	const { logout } = useAuth();
+	const { colors } = useThemedStyles();
 
 	const handleLogout = () => {
 		setIsDropdownVisible(false);
@@ -60,14 +62,14 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 	};
 
 	return (
-		<View className="mb-6">
-			<View className="flex-row justify-between items-center mb-2">
-				<View className="flex-1">
-					<StyledText variant="black" className="text-primary text-4xl">
+		<View style={styles.container}>
+			<View style={styles.headerRow}>
+				<View style={styles.titleContainer}>
+					<StyledText variant="black" style={[styles.title, { color: colors.text }]}>
 						{title}
 					</StyledText>
 					{subtitle && (
-						<StyledText variant="light" className="text-primary text-xl">
+						<StyledText variant="light" style={[styles.subtitle, { color: colors.text }]}>
 							{subtitle}
 						</StyledText>
 					)}
@@ -77,18 +79,18 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 					<View>
 						{/* Profile Image (prefer GitHub avatar if available) */}
 						<TouchableOpacity 
-							className="w-16 h-16 rounded-full overflow-hidden border-2 border-action"
+							style={styles.profileButton}
 							onPress={() => setIsDropdownVisible(!isDropdownVisible)}
 						>
 							{githubInfo?.avatarUrl || user.photoURL ? (
 								<Image
 									source={{ uri: githubInfo?.avatarUrl || user.photoURL! }}
-									className="w-full h-full"
+									style={styles.profileImage}
 									resizeMode="cover"
 								/>
 							) : (
-								<View className="w-full h-full bg-action items-center justify-center">
-									<StyledText variant="semibold" className="text-white text-lg">
+								<View style={styles.profilePlaceholder}>
+									<StyledText variant="semibold" style={styles.profilePlaceholderText}>
 										{user.email?.charAt(0).toUpperCase() || 'U'}
 									</StyledText>
 								</View>
@@ -106,30 +108,33 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 									animationType="fade"
 								>
 									<Pressable 
-										className="flex-1"
+										style={styles.modalBackdrop}
 										onPress={() => setIsDropdownVisible(false)}
 									>
-										<View className="absolute right-4 top-24 bg-white rounded-2xl shadow-2xl border border-gray-200 min-w-[180px] overflow-hidden">
+										<View style={[styles.dropdownMenu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
 											{/* User Info */}
-											<View className="px-4 py-3 border-b border-gray-200 bg-gray-100">
+											<View style={[styles.userInfo, { borderBottomColor: colors.border }]}>
 												{/* Prefer GitHub name + username when available */}
 												{(githubInfo?.name || user.displayName) && (
-													<StyledText variant="medium" className="text-primary text-xl" numberOfLines={1}>
+													<StyledText variant="medium" style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
 														{githubInfo?.name || user.displayName}
 													</StyledText>
 												)}
-												<StyledText variant="medium" className="text-primary text-sm" numberOfLines={1}>
+												<StyledText variant="medium" style={[styles.userEmail, { color: colors.text }]} numberOfLines={1}>
 													{user.email}
 												</StyledText>
 											</View>
 
 											{/* Settings Button */}
 											<TouchableOpacity
-												onPress={() => router.push("/(screens)/settings")}
-												className="flex-row items-center px-4 py-3 active:bg-gray-100"
+												onPress={() => {
+													setIsDropdownVisible(false);
+													router.push('/(screens)/settings');
+												}}
+												style={styles.menuItem}
 											>
 												<Ionicons name="settings-outline" size={20} color="#4b5563" />
-												<StyledText variant="medium" className="text-primary ml-3">
+												<StyledText variant="medium" style={[styles.menuItemText, { color: colors.text }]}>
 													Settings
 												</StyledText>
 											</TouchableOpacity>
@@ -137,10 +142,10 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 											{/* Logout Button */}
 											<TouchableOpacity
 												onPress={handleLogout}
-												className="flex-row items-center px-4 py-3 active:bg-gray-100"
+												style={styles.menuItem}
 											>
 												<Ionicons name="log-out-outline" size={20} color="#ef4444" />
-												<StyledText variant="medium" className="text-red-500 ml-3">
+												<StyledText variant="medium" style={styles.logoutText}>
 													Logout
 												</StyledText>
 											</TouchableOpacity>
@@ -156,8 +161,8 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 			{/* Custom Logout Alert */}
 			<Alert
 				visible={isLogoutAlertVisible}
-				title="Logout"
-				message="Are you sure you want to logout?"
+				title="Log Out"
+				message="This will log you out of the app. Are you sure?"
 				icon="log-out-outline"
 				iconColor="#ef4444"
 				buttons={[
@@ -167,7 +172,7 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 						onPress: () => setIsLogoutAlertVisible(false),
 					},
 					{
-						text: 'Logout',
+						text: 'Log Out',
 						style: 'destructive',
 						onPress: confirmLogout,
 					},
@@ -193,5 +198,89 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 		</View>
 	);
 };
+
+const styles = StyleSheet.create({
+	container: {
+		marginVertical: 12,
+	},
+	headerRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	titleContainer: {
+		flex: 1,
+	},
+	title: {
+		fontSize: 36,
+	},
+	subtitle: {
+		fontSize: 20,
+	},
+	profileButton: {
+		width: 64,
+		height: 64,
+		borderRadius: 32,
+		overflow: 'hidden',
+		borderWidth: 2,
+		borderColor: '#7C3AED',
+	},
+	profileImage: {
+		width: '100%',
+		height: '100%',
+	},
+	profilePlaceholder: {
+		width: '100%',
+		height: '100%',
+		backgroundColor: '#7C3AED',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	profilePlaceholderText: {
+		color: '#fff',
+		fontSize: 18,
+	},
+	modalBackdrop: {
+		flex: 1,
+	},
+	dropdownMenu: {
+		position: 'absolute',
+		right: 16,
+		top: 80,
+		borderRadius: 16,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.3,
+		shadowRadius: 16,
+		elevation: 16,
+		borderWidth: 1,
+		minWidth: 180,
+		overflow: 'hidden',
+	},
+	userInfo: {
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+	},
+	userName: {
+		fontSize: 20,
+	},
+	userEmail: {
+		fontSize: 14,
+	},
+	menuItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+	},
+	menuItemText: {
+		marginLeft: 12,
+	},
+	logoutText: {
+		color: '#ef4444',
+		marginLeft: 12,
+	},
+});
 
 export default Header;

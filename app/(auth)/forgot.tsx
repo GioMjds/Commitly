@@ -1,21 +1,24 @@
 import StyledText from '@/components/ui/StyledText';
 import { useAuth } from '@/hooks/useAuth';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { forgotPasswordSchema, ForgotPasswordSchema } from '@/utils/validations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import {
-	Alert,
-	Image,
-	ScrollView,
-	TextInput,
-	TouchableOpacity,
-	View,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPasswordScreen() {
 	const { forgotPassword } = useAuth();
+	const { colors } = useThemedStyles();
 
 	const {
 		control,
@@ -48,39 +51,39 @@ export default function ForgotPasswordScreen() {
 	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-neutral">
+		<SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
 			<ScrollView
-				className="flex-1"
-				contentContainerStyle={{ flexGrow: 1 }}
+				style={styles.scrollView}
+				contentContainerStyle={styles.scrollContent}
 			>
-				<View className="flex-1 px-6 justify-center">
-					<View className="items-center">
+				<View style={styles.content}>
+					<View style={styles.logoContainer}>
 						<Image
 							source={require('@/assets/images/commitly1.png')}
-							className="w-48 h-48 self-center rounded-full"
+							style={styles.logo}
 							resizeMode="center"
 						/>
 					</View>
-					<View className="mb-6">
+					<View style={styles.header}>
 						<StyledText
 							variant="black"
-							className="text-4xl text-primary mb-2"
+							style={[styles.title, { color: colors.text }]}
 						>
 							Reset Password
 						</StyledText>
 						<StyledText
 							variant="light"
-							className="text-lg text-primary/70"
+							style={[styles.subtitle, { color: colors.textSecondary }]}
 						>
 							Enter your email to receive reset instructions
 						</StyledText>
 					</View>
 
-					<View className="space-y-6">
+					<View style={styles.formContainer}>
 						<View>
 							<StyledText
 								variant="medium"
-								className="text-primary mb-2"
+								style={[styles.label, { color: colors.text }]}
 							>
 								Email
 							</StyledText>
@@ -91,9 +94,16 @@ export default function ForgotPasswordScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 mb-4 text-primary border border-gray-200"
+										style={[
+											styles.input,
+											{
+												backgroundColor: colors.surface,
+												color: colors.text,
+												borderColor: colors.border,
+											}
+										]}
 										placeholder="Enter your email"
-										placeholderTextColor="#94a3b8"
+										placeholderTextColor={colors.textMuted}
 										onBlur={onBlur}
 										onChangeText={onChange}
 										value={value}
@@ -105,7 +115,7 @@ export default function ForgotPasswordScreen() {
 							{errors.email && (
 								<StyledText
 									variant="light"
-									className="text-red-500 mt-1 text-sm"
+									style={styles.errorText}
 								>
 									{errors.email.message}
 								</StyledText>
@@ -113,13 +123,13 @@ export default function ForgotPasswordScreen() {
 						</View>
 
 						<TouchableOpacity
-							className="bg-action rounded-2xl py-4 items-center shadow-lg shadow-action/30"
+							style={styles.resetButton}
 							onPress={handleSubmit(onSubmit)}
 							disabled={isSubmitting}
 						>
 							<StyledText
 								variant="semibold"
-								className="text-white text-lg"
+								style={styles.resetButtonText}
 							>
 								{isSubmitting
 									? 'Sending...'
@@ -127,12 +137,12 @@ export default function ForgotPasswordScreen() {
 							</StyledText>
 						</TouchableOpacity>
 
-						<View className="flex-row justify-center items-center mt-6">
+						<View style={styles.backToSignIn}>
 							<Link href="/login" asChild>
 								<TouchableOpacity>
 									<StyledText
 										variant="semibold"
-										className="text-secondary text-xl"
+										style={styles.backToSignInText}
 									>
 										Back to Sign In
 									</StyledText>
@@ -145,3 +155,82 @@ export default function ForgotPasswordScreen() {
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	scrollContent: {
+		flexGrow: 1,
+	},
+	content: {
+		flex: 1,
+		paddingHorizontal: 24,
+		justifyContent: 'center',
+	},
+	logoContainer: {
+		alignItems: 'center',
+	},
+	logo: {
+		width: 192,
+		height: 192,
+		borderRadius: 96,
+	},
+	header: {
+		marginBottom: 24,
+	},
+	title: {
+		fontSize: 36,
+		marginBottom: 8,
+	},
+	subtitle: {
+		fontSize: 18,
+	},
+	formContainer: {
+		gap: 24,
+	},
+	label: {
+		marginBottom: 8,
+	},
+	input: {
+		borderRadius: 16,
+		paddingHorizontal: 16,
+		paddingVertical: 16,
+		marginBottom: 16,
+		borderWidth: 1,
+		fontSize: 16,
+	},
+	errorText: {
+		color: '#EF4444',
+		marginTop: 4,
+		fontSize: 14,
+	},
+	resetButton: {
+		backgroundColor: '#7C3AED',
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+		shadowColor: '#7C3AED',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	resetButtonText: {
+		color: '#FFFFFF',
+		fontSize: 18,
+	},
+	backToSignIn: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginTop: 24,
+	},
+	backToSignInText: {
+		color: '#0EA5A4',
+		fontSize: 20,
+	},
+});

@@ -5,16 +5,18 @@ import StreakCoach from '@/components/ui/StreakCoach';
 import StyledText from '@/components/ui/StyledText';
 import { useCommit } from '@/hooks/useCommit';
 import { useStreak } from '@/hooks/useStreak';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from '@/store/AuthStore';
 import { useCommitStore } from '@/store/CommitStore';
-import { DashboardStats, MoodType } from '@/types/Commit.types';
+import { DashboardStats } from '@/types/Commit.types';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-	ActivityIndicator,
-	ScrollView,
-	TouchableOpacity,
-	View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,6 +24,7 @@ export default function DashboardScreen() {
 	const { user } = useAuthStore();
 	const { commits, streakData, loading } = useCommitStore();
 	const { fetchCommits } = useCommit();
+	const { colors } = useThemedStyles();
 
 	useStreak();
 
@@ -56,46 +59,18 @@ export default function DashboardScreen() {
 			}
 		});
 
-		const topTags = Object.entries(tagCounts)
-			.map(([tag, count]) => ({ tag, count }))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 5);
-
-		// Calculate mood trend
-		const moodCounts: Record<MoodType, number> = {
-			'😄': 0,
-			'😊': 0,
-			'😐': 0,
-			'😔': 0,
-			'😞': 0,
-		};
-
-		commits.forEach((commit) => {
-			if (commit.mood) {
-				moodCounts[commit.mood as MoodType] =
-					(moodCounts[commit.mood as MoodType] || 0) + 1;
-			}
-		});
-
-		const moodTrend = Object.entries(moodCounts)
-			.map(([mood, count]) => ({ mood: mood as MoodType, count }))
-			.filter((item) => item.count > 0)
-			.sort((a, b) => b.count - a.count);
-
 		return {
 			totalCommits,
 			currentStreak: streakData.currentStreak,
 			longestStreak: streakData.longestStreak,
-			topTags,
-			moodTrend,
 		};
 	}, [commits, streakData]);
 
 	if (loading && commits.length === 0) {
 		return (
-			<SafeAreaView className="flex-1 bg-neutral justify-center items-center">
+			<SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: colors.neutral }]}>
 				<ActivityIndicator size="large" color="#0891b2" />
-				<StyledText variant="medium" className="text-primary mt-4">
+				<StyledText variant="medium" style={[styles.loadingText, { color: colors.text }]}>
 					Loading your data...
 				</StyledText>
 			</SafeAreaView>
@@ -103,10 +78,10 @@ export default function DashboardScreen() {
 	}
 
 	return (
-		<SafeAreaView className="flex-1 p-6 bg-neutral">
+		<SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
 			{/* Header */}
-			<View className="flex-row justify-between items-center mb-4">
-				<View className="flex-1">
+			<View style={styles.headerContainer}>
+				<View style={styles.headerContent}>
 					<Header 
 						title="Dashboard" 
 						subtitle="Track your progress and stay consistent" 
@@ -115,7 +90,6 @@ export default function DashboardScreen() {
 			</View>
 
 			<ScrollView
-				className="flex-1"
 				showsVerticalScrollIndicator={false}
 			>
 				<StreakBadge stats={stats} />
@@ -132,29 +106,29 @@ export default function DashboardScreen() {
 
 				{/* Empty State */}
 				{commits.length === 0 && (
-					<View className="items-center py-12">
+					<View style={styles.emptyState}>
 						{!isGitHubUser && (
 							<>
-								<StyledText className="text-6xl mb-4">🔗</StyledText>
+								<StyledText style={styles.emptyStateEmoji}>🔗</StyledText>
 								<StyledText
 									variant="semibold"
-									className="text-primary text-2xl mb-2"
+									style={[styles.emptyStateTitle, { color: colors.text }]}
 								>
 									Connect GitHub
 								</StyledText>
 								<StyledText
 									variant="light"
-									className="text-primary/60 text-center mb-6 px-8"
+									style={[styles.emptyStateMessage, { color: colors.textMuted }]}
 								>
 									Sign in with GitHub to automatically track your coding commits and build your streak!
 								</StyledText>
 								<TouchableOpacity
 									onPress={() => router.push('/settings')}
-									className="bg-action rounded-2xl px-6 py-3"
+									style={styles.emptyStateButton}
 								>
 									<StyledText
 										variant="semibold"
-										className="text-white text-lg"
+										style={styles.emptyStateButtonText}
 									>
 										Go to Settings
 									</StyledText>
@@ -167,3 +141,53 @@ export default function DashboardScreen() {
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		paddingHorizontal: 24,
+	},
+	centerContent: {
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	loadingText: {
+		marginTop: 16,
+	},
+	headerContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	headerContent: {
+		flex: 1,
+	},
+	emptyState: {
+		alignItems: 'center',
+		paddingVertical: 48,
+	},
+	emptyStateEmoji: {
+		fontSize: 64,
+		marginBottom: 16,
+	},
+	emptyStateTitle: {
+		fontSize: 24,
+		marginBottom: 8,
+	},
+	emptyStateMessage: {
+		textAlign: 'center',
+		marginBottom: 24,
+		paddingHorizontal: 32,
+		opacity: 0.6,
+	},
+	emptyStateButton: {
+		backgroundColor: '#7C3AED',
+		borderRadius: 16,
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+	},
+	emptyStateButtonText: {
+		color: '#fff',
+		fontSize: 18,
+	},
+});

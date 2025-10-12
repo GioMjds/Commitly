@@ -1,7 +1,7 @@
 import StyledText from '@/components/ui/StyledText';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 interface StreakCoachProps {
     currentStreak: number;
@@ -111,20 +111,33 @@ export default function StreakCoach({
 
     if (!coachMessage) return null;
 
+    const getBackgroundColor = (colorClass: string) => {
+        switch (colorClass) {
+            case 'bg-orange-500': return '#f97316';
+            case 'bg-yellow-500': return '#eab308';
+            case 'bg-green-500': return '#22c55e';
+            case 'bg-indigo-600': return '#4f46e5';
+            case 'bg-purple-600': return '#9333ea';
+            case 'bg-cyan-600': return '#0891b2';
+            case 'bg-teal-500': return '#14b8a6';
+            default: return '#4f46e5';
+        }
+    };
+
     return (
-        <View className={`${coachMessage.color} rounded-2xl p-4 mb-4 shadow-sm`}>
-            <View className="flex-row items-start">
-                <View className="mr-3">
-                    <StyledText className="text-4xl">{coachMessage.emoji}</StyledText>
+        <View style={[styles.container, { backgroundColor: getBackgroundColor(coachMessage.color) }]}>
+            <View style={styles.contentRow}>
+                <View style={styles.emojiContainer}>
+                    <StyledText style={styles.emoji}>{coachMessage.emoji}</StyledText>
                 </View>
-                <View className="flex-1">
-                    <View className="flex-row items-center mb-1">
+                <View style={styles.textContainer}>
+                    <View style={styles.titleRow}>
                         <Ionicons name={coachMessage.icon} size={18} color="#fff" />
-                        <StyledText variant="extrabold" className="text-white ml-2 text-lg">
+                        <StyledText variant="extrabold" style={styles.title}>
                             {coachMessage.title}
                         </StyledText>
                     </View>
-                    <StyledText variant="medium" className="text-neutral text-lg">
+                    <StyledText variant="medium" style={styles.message}>
                         {coachMessage.message}
                     </StyledText>
                 </View>
@@ -132,3 +145,43 @@ export default function StreakCoach({
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    contentRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    emojiContainer: {
+        marginRight: 12,
+    },
+    emoji: {
+        fontSize: 36,
+    },
+    textContainer: {
+        flex: 1,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    title: {
+        color: '#fff',
+        marginLeft: 8,
+        fontSize: 18,
+    },
+    message: {
+        color: '#FAFAFA',
+        fontSize: 18,
+    },
+});

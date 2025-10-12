@@ -1,15 +1,18 @@
 import Header from '@/components/layout/Header';
 import Alert from '@/components/ui/Alert';
 import StyledText from '@/components/ui/StyledText';
-import { useCommit } from '@/hooks/useCommit';
 import { useGithubAuth } from '@/hooks/useGithubAuth';
 import { useGithubCommits } from '@/hooks/useGithubCommits';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from '@/store/AuthStore';
+import { useThemeStore } from '@/store/ThemeStore';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
 	ActivityIndicator,
 	ScrollView,
+	StyleSheet,
 	Switch,
 	TouchableOpacity,
 	View,
@@ -25,16 +28,23 @@ export default function SettingsScreen() {
 	});
 
 	const { user } = useAuthStore();
-	const { syncSettings, updateSyncSettings, syncGithubCommits, loading } = useGithubCommits();
-    const { fetchCommits } = useCommit();
+	const { syncSettings, updateSyncSettings, loading } = useGithubCommits();
 	const { linkGithubAccount } = useGithubAuth();
+	const { themeMode, setThemeMode } = useThemeStore();
+	const { activeTheme, isDark } = useTheme();
+	const { colors } = useThemedStyles();
 
-	// Check if user has GitHub provider
+	useEffect(() => {
+		console.log(`[Settings] 📊 Component mounted/updated`);
+		console.log(`[Settings] 📱 Current themeMode: ${themeMode}`);
+		console.log(`[Settings] 🎨 Current activeTheme: ${activeTheme}`);
+		console.log(`[Settings] 🌙 isDark: ${isDark}`);
+	}, [themeMode, activeTheme, isDark]);
+
 	const isGitHubUser = user?.providerData?.some(
 		(provider) => provider.providerId === 'github.com'
 	);
 
-	// Check if user is email/password only
 	const isEmailUser = user?.providerData?.every(
 		(provider) => provider.providerId === 'password'
 	);
@@ -62,32 +72,6 @@ export default function SettingsScreen() {
 		setAlertVisible(true);
 	};
 
-	const handleManualSync = async () => {
-        if (!isGitHubUser) {
-            setAlertConfig({
-                title: 'Error',
-                message: 'Please sign in with GitHub to sync commits',
-                icon: 'alert-circle-outline',
-            });
-            setAlertVisible(true);
-            return;
-        }
-
-        const result = await syncGithubCommits();
-
-        // ✅ Always refresh commits after sync (whether auto-create is on or not)
-        if (result.success) await fetchCommits();
-
-        setAlertConfig({
-            title: result.success ? 'Success' : 'Error',
-            message: result.message,
-            icon: result.success
-                ? 'checkmark-circle-outline'
-                : 'alert-circle-outline',
-        });
-        setAlertVisible(true);
-    };
-
 	const handleLinkGithub = async () => {
 		const result = await linkGithubAccount();
 		
@@ -105,44 +89,197 @@ export default function SettingsScreen() {
 		}
 	};
 
+	const handleThemeChange = async (mode: 'light' | 'dark' | 'system') => {
+		console.log(`[Settings] 👆 User selected theme: ${mode}`);
+		await setThemeMode(mode);
+		console.log(`[Settings] ✅ Theme change completed for: ${mode}`);
+	};
+
 	return (
-		<SafeAreaView className="flex-1 bg-neutral">
-			<ScrollView className="flex-1 px-6 py-6">
+		<SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
+			<ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
 				<Header title="Settings" subtitle="Customize your experience" />
-				{/* GitHub Integration Section */}
-				<View className="mb-6">
+				
+				{/* Appearance Section */}
+				<View style={styles.section}>
 					<StyledText
 						variant="semibold"
-						className="text-primary text-xl mb-3"
+						style={[styles.sectionTitle, { color: colors.text }]}
+					>
+						Appearance
+					</StyledText>
+
+					<View style={[styles.card, { backgroundColor: colors.surface }]}>
+						<StyledText
+							variant="medium"
+							style={[styles.subtitle, { color: colors.textSecondary }]}
+						>
+							Choose your preferred theme
+						</StyledText>
+
+						{/* Light Mode Option */}
+						<TouchableOpacity
+							onPress={() => handleThemeChange('light')}
+							style={[
+								styles.themeOption,
+								themeMode === 'light' && styles.themeOptionSelected,
+								themeMode === 'light' 
+									? { backgroundColor: colors.actionOpacity10, borderColor: colors.action, borderWidth: 2 }
+									: { backgroundColor: colors.grayOpacity }
+							]}
+						>
+							<View style={styles.themeOptionContent}>
+								<View style={[
+									styles.themeIconContainer,
+									{ backgroundColor: themeMode === 'light' ? colors.actionOpacity20 : colors.borderLight }
+								]}>
+									<Ionicons
+										name="sunny"
+										size={24}
+										color={themeMode === 'light' ? colors.action : colors.textMuted}
+									/>
+								</View>
+								<View>
+									<StyledText
+										variant="semibold"
+										style={{ color: themeMode === 'light' ? colors.action : colors.text }}
+									>
+										Light Mode
+									</StyledText>
+									<StyledText
+										variant="light"
+										style={[styles.themeOptionSubtext, { color: colors.textSecondary }]}
+									>
+										Always use light theme
+									</StyledText>
+								</View>
+							</View>
+							{themeMode === 'light' && (
+								<Ionicons name="checkmark-circle" size={24} color={colors.action} />
+							)}
+						</TouchableOpacity>
+
+						{/* Dark Mode Option */}
+						<TouchableOpacity
+							onPress={() => handleThemeChange('dark')}
+							style={[
+								styles.themeOption,
+								themeMode === 'dark' && styles.themeOptionSelected,
+								themeMode === 'dark' 
+									? { backgroundColor: colors.actionOpacity10, borderColor: colors.action, borderWidth: 2 }
+									: { backgroundColor: colors.grayOpacity }
+							]}
+						>
+							<View style={styles.themeOptionContent}>
+								<View style={[
+									styles.themeIconContainer,
+									{ backgroundColor: themeMode === 'dark' ? colors.actionOpacity20 : colors.borderLight }
+								]}>
+									<Ionicons
+										name="moon"
+										size={24}
+										color={themeMode === 'dark' ? colors.action : colors.textMuted}
+									/>
+								</View>
+								<View>
+									<StyledText
+										variant="semibold"
+										style={{ color: themeMode === 'dark' ? colors.action : colors.text }}
+									>
+										Dark Mode
+									</StyledText>
+									<StyledText
+										variant="light"
+										style={[styles.themeOptionSubtext, { color: colors.textSecondary }]}
+									>
+										Always use dark theme
+									</StyledText>
+								</View>
+							</View>
+							{themeMode === 'dark' && (
+								<Ionicons name="checkmark-circle" size={24} color={colors.action} />
+							)}
+						</TouchableOpacity>
+
+						{/* System Default Option */}
+						<TouchableOpacity
+							onPress={() => handleThemeChange('system')}
+							style={[
+								styles.themeOption,
+								styles.themeOptionLast,
+								themeMode === 'system' && styles.themeOptionSelected,
+								themeMode === 'system' 
+									? { backgroundColor: colors.actionOpacity10, borderColor: colors.action, borderWidth: 2 }
+									: { backgroundColor: colors.grayOpacity }
+							]}
+						>
+							<View style={styles.themeOptionContent}>
+								<View style={[
+									styles.themeIconContainer,
+									{ backgroundColor: themeMode === 'system' ? colors.actionOpacity20 : colors.borderLight }
+								]}>
+									<Ionicons
+										name="phone-portrait"
+										size={24}
+										color={themeMode === 'system' ? colors.action : colors.textMuted}
+									/>
+								</View>
+								<View>
+									<StyledText
+										variant="semibold"
+										style={{ color: themeMode === 'system' ? colors.action : colors.text }}
+									>
+										System Default
+									</StyledText>
+									<StyledText
+										variant="light"
+										style={[styles.themeOptionSubtext, { color: colors.textSecondary }]}
+									>
+										Match device theme
+									</StyledText>
+								</View>
+							</View>
+							{themeMode === 'system' && (
+								<Ionicons name="checkmark-circle" size={24} color={colors.action} />
+							)}
+						</TouchableOpacity>
+					</View>
+				</View>
+
+				{/* GitHub Integration Section */}
+				<View style={styles.section}>
+					<StyledText
+						variant="semibold"
+						style={[styles.sectionTitle, { color: colors.text }]}
 					>
 						GitHub Integration
 					</StyledText>
 
-					<View className="bg-white rounded-2xl p-5 shadow-md">
+					<View style={[styles.card, { backgroundColor: colors.surface }]}>
 						{/* Email/Password User - Not Yet Linked */}
 						{isEmailUser && !isGitHubUser ? (
-							<View className="items-center py-4">
+							<View style={styles.githubConnectContainer}>
 								<Ionicons
 									name="logo-github"
 									size={48}
-									color="#94a3b8"
+									color={colors.textMuted}
 								/>
 								<StyledText
 									variant="semibold"
-									className="text-primary text-lg mt-3 mb-2"
+									style={[styles.githubTitle, { color: colors.text }]}
 								>
 									Connect GitHub Account
 								</StyledText>
 								<StyledText
 									variant="light"
-									className="text-primary/60 text-center mb-4 px-4"
+									style={[styles.githubSubtitle, { color: colors.textSecondary }]}
 								>
 									Link your GitHub account to automatically sync commits and update your profile picture
 								</StyledText>
 								<TouchableOpacity
 									onPress={handleLinkGithub}
 									disabled={loading}
-									className="bg-primary rounded-2xl px-6 py-3 flex-row items-center shadow-lg shadow-primary/30"
+									style={[styles.githubButton, { backgroundColor: colors.primary }]}
 								>
 									{loading ? (
 										<ActivityIndicator size="small" color="#ffffff" />
@@ -151,7 +288,7 @@ export default function SettingsScreen() {
 											<Ionicons name="logo-github" size={20} color="#ffffff" />
 											<StyledText
 												variant="semibold"
-												className="text-white ml-2"
+												style={styles.githubButtonText}
 											>
 												Connect GitHub
 											</StyledText>
@@ -161,15 +298,15 @@ export default function SettingsScreen() {
 							</View>
 						) : !isGitHubUser ? (
 							/* No GitHub at all */
-							<View className="items-center py-4">
+							<View style={styles.githubConnectContainer}>
 								<Ionicons
 									name="logo-github"
 									size={48}
-									color="#94a3b8"
+									color={colors.textMuted}
 								/>
 								<StyledText
 									variant="medium"
-									className="text-primary/60 mt-3 text-center"
+									style={[styles.githubNoAccount, { color: colors.textSecondary }]}
 								>
 									Sign in with GitHub to sync your commits
 								</StyledText>
@@ -178,17 +315,17 @@ export default function SettingsScreen() {
 							/* GitHub User - Full Sync Features */
 							<>
 								{/* Enable Sync Toggle */}
-								<View className="flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200">
-									<View className="flex-1">
+								<View style={styles.syncToggleRow}>
+									<View style={styles.syncToggleText}>
 										<StyledText
 											variant="semibold"
-											className="text-primary text-lg"
+											style={[styles.syncTitle, { color: colors.text }]}
 										>
 											Enable GitHub Sync
 										</StyledText>
 										<StyledText
 											variant="light"
-											className="text-primary/60 text-sm"
+											style={[styles.syncSubtitle, { color: colors.textSecondary }]}
 										>
 											Automatically sync and create daily commits from your GitHub activity
 										</StyledText>
@@ -204,44 +341,12 @@ export default function SettingsScreen() {
 									/>
 								</View>
 
-								{/* Manual Sync Button */}
-								<TouchableOpacity
-									onPress={handleManualSync}
-									disabled={loading || !syncSettings.enabled}
-									className={`rounded-2xl py-3 items-center flex-row justify-center ${
-										syncSettings.enabled
-											? 'bg-action'
-											: 'bg-gray-300'
-									}`}
-								>
-									{loading ? (
-										<ActivityIndicator
-											size="small"
-											color="#ffffff"
-										/>
-									) : (
-										<>
-											<Ionicons
-												name="sync"
-												size={20}
-												color="#ffffff"
-											/>
-											<StyledText
-												variant="semibold"
-												className="text-white ml-2"
-											>
-												Sync Now
-											</StyledText>
-										</>
-									)}
-								</TouchableOpacity>
-
 								{/* Last Sync Info */}
 								{syncSettings.lastSyncDate && (
-									<View className="mt-4 pt-4 border-t border-gray-200">
+									<View style={[styles.lastSyncContainer, { borderTopColor: colors.border }]}>
 										<StyledText
 											variant="light"
-											className="text-primary/60 text-lg text-center"
+											style={[styles.lastSyncText, { color: colors.textSecondary }]}
 										>
 											Last synced:{' '}
 											{new Date(syncSettings.lastSyncDate).toLocaleString()}
@@ -265,3 +370,124 @@ export default function SettingsScreen() {
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	scrollContent: {
+		padding: 24,
+	},
+	section: {
+		marginBottom: 24,
+	},
+	sectionTitle: {
+		fontSize: 20,
+		marginBottom: 12,
+	},
+	card: {
+		borderRadius: 16,
+		padding: 20,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 8,
+		elevation: 3,
+	},
+	subtitle: {
+		fontSize: 14,
+		marginBottom: 16,
+	},
+	themeOption: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		padding: 16,
+		borderRadius: 12,
+		marginBottom: 12,
+	},
+	themeOptionLast: {
+		marginBottom: 0,
+	},
+	themeOptionSelected: {
+		// Selected state is handled by inline styles for colors
+	},
+	themeOptionContent: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 12,
+	},
+	themeIconContainer: {
+		width: 48,
+		height: 48,
+		borderRadius: 24,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	themeOptionSubtext: {
+		fontSize: 12,
+	},
+	// GitHub Integration styles
+	githubConnectContainer: {
+		alignItems: 'center',
+		paddingVertical: 16,
+	},
+	githubTitle: {
+		fontSize: 18,
+		marginTop: 12,
+		marginBottom: 8,
+	},
+	githubSubtitle: {
+		textAlign: 'center',
+		marginBottom: 16,
+		paddingHorizontal: 16,
+	},
+	githubButton: {
+		borderRadius: 16,
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+		flexDirection: 'row',
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	githubButtonText: {
+		color: '#FFFFFF',
+		marginLeft: 8,
+	},
+	githubNoAccount: {
+		marginTop: 12,
+		textAlign: 'center',
+	},
+	syncToggleRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	syncToggleText: {
+		flex: 1,
+		marginRight: 16,
+	},
+	syncTitle: {
+		fontSize: 18,
+		marginBottom: 4,
+	},
+	syncSubtitle: {
+		fontSize: 14,
+	},
+	lastSyncContainer: {
+		marginTop: 16,
+		paddingTop: 16,
+		borderTopWidth: 1,
+	},
+	lastSyncText: {
+		fontSize: 18,
+		textAlign: 'center',
+	},
+});

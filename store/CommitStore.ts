@@ -52,7 +52,6 @@ export const useCommitStore = create<CommitState>((set, get) => ({
         set((state) => ({
             pendingOperations: [...state.pendingOperations, operation]
         }));
-        // Save to AsyncStorage
         const operations = [...get().pendingOperations];
         await AsyncStorage.setItem('pendingCommitOperations', JSON.stringify(operations));
     },
@@ -60,7 +59,6 @@ export const useCommitStore = create<CommitState>((set, get) => ({
         set((state) => ({
             pendingOperations: state.pendingOperations.filter(op => op.id !== id)
         }));
-        // Update AsyncStorage
         const operations = [...get().pendingOperations];
         await AsyncStorage.setItem('pendingCommitOperations', JSON.stringify(operations));
     },

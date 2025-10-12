@@ -1,6 +1,7 @@
 import Alert from "@/components/ui/Alert";
 import StyledText from "@/components/ui/StyledText";
 import { useCommit } from "@/hooks/useCommit";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { CommitFormData } from "@/types/Commit.types";
 import { CommitFormSchema, commitSchema } from "@/utils/validations";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +14,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
+    StyleSheet,
     TextInput,
     TouchableOpacity,
     View,
@@ -30,6 +32,7 @@ export default function AddCommitScreen() {
     const [loading, setLoading] = useState<boolean>(false);
 
     const { createCommit } = useCommit();
+    const { colors } = useThemedStyles();
 
     const {
         control,
@@ -108,30 +111,30 @@ export default function AddCommitScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-neutral">
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                className="flex-1"
+                style={styles.keyboardView}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 {/* Header */}
-                <View className="px-6 py-4 border-b border-gray-200">
-                    <View className="flex-row items-center justify-between">
+                <View style={[styles.header, { borderBottomColor: colors.border }]}>
+                    <View style={styles.headerRow}>
                         <TouchableOpacity onPress={() => router.back()}>
-                            <Ionicons name="close" size={28} color="#0F172A" />
+                            <Ionicons name="close" size={28} color={colors.text} />
                         </TouchableOpacity>
-                        <StyledText variant="semibold" className="text-primary text-2xl">
+                        <StyledText variant="semibold" style={[styles.headerTitle, { color: colors.text }]}>
                             Add Commit Note
                         </StyledText>
                         <TouchableOpacity
                             onPress={handleSubmit(onSubmit)}
                             disabled={loading}
-                            className="bg-action rounded-xl px-4 py-2"
+                            style={styles.saveButton}
                         >
                             {loading ? (
                                 <ActivityIndicator size="small" color="#ffffff" />
                             ) : (
-                                <StyledText variant="semibold" className="text-white">
+                                <StyledText variant="semibold" style={styles.saveButtonText}>
                                     Save
                                 </StyledText>
                             )}
@@ -140,12 +143,12 @@ export default function AddCommitScreen() {
                 </View>
 
                 <ScrollView
-                    className="flex-1 px-6 py-4"
+                    style={styles.scrollView}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Title Input */}
-                    <View className="mb-4">
-                        <StyledText variant="semibold" className="text-primary text-lg mb-2">
+                    <View style={styles.fieldContainer}>
+                        <StyledText variant="semibold" style={[styles.fieldLabel, { color: colors.text }]}>
                             Title *
                         </StyledText>
                         <Controller
@@ -157,21 +160,28 @@ export default function AddCommitScreen() {
                                     onChangeText={onChange}
                                     onBlur={onBlur}
                                     placeholder="What did you work on?"
-                                    placeholderTextColor="#94a3b8"
-                                    className="bg-white rounded-2xl px-4 py-4 text-primary font-hubot text-base border border-gray-200"
+                                    placeholderTextColor={colors.textMuted}
+                                    style={[
+                                        styles.textInput,
+                                        {
+                                            backgroundColor: colors.surface,
+                                            color: colors.text,
+                                            borderColor: colors.border,
+                                        }
+                                    ]}
                                 />
                             )}
                         />
                         {errors.title && (
-                            <StyledText variant="medium" className="text-red-500 text-sm mt-1">
+                            <StyledText variant="medium" style={styles.errorText}>
                                 {errors.title.message}
                             </StyledText>
                         )}
                     </View>
 
                     {/* Time Spent Input */}
-                    <View className="mb-4">
-                        <StyledText variant="semibold" className="text-primary text-lg mb-2">
+                    <View style={styles.fieldContainer}>
+                        <StyledText variant="semibold" style={[styles.fieldLabel, { color: colors.text }]}>
                             Time Spent
                         </StyledText>
                         
@@ -188,9 +198,17 @@ export default function AddCommitScreen() {
                                     }}
                                     onBlur={onBlur}
                                     placeholder="e.g., 30"
-                                    placeholderTextColor="#94a3b8"
+                                    placeholderTextColor={colors.textMuted}
                                     keyboardType="numeric"
-                                    className="bg-white rounded-2xl px-4 py-4 text-primary font-hubot text-base border border-gray-200 mb-3"
+                                    style={[
+                                        styles.textInput,
+                                        styles.timeInput,
+                                        {
+                                            backgroundColor: colors.surface,
+                                            color: colors.text,
+                                            borderColor: colors.border,
+                                        }
+                                    ]}
                                 />
                             )}
                         />
@@ -201,23 +219,20 @@ export default function AddCommitScreen() {
                             name="timeUnit"
                             render={({ field: { value } }) => (
                                 <View>
-                                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                                    <View style={styles.timeUnitRow}>
                                         <TouchableOpacity
                                             onPress={() => handleTimeUnitSelect('minutes')}
-                                            style={{
-                                                flex: 1,
-                                                paddingVertical: 12,
-                                                paddingHorizontal: 16,
-                                                backgroundColor: value === 'minutes' ? '#7C3AED' : '#FFFFFF',
-                                                borderRadius: 16,
-                                                borderWidth: 2,
-                                                borderColor: value === 'minutes' ? '#7C3AED' : '#E5E7EB',
-                                                alignItems: 'center',
-                                            }}
+                                            style={[
+                                                styles.timeUnitButton,
+                                                {
+                                                    backgroundColor: value === 'minutes' ? '#7C3AED' : colors.surface,
+                                                    borderColor: value === 'minutes' ? '#7C3AED' : colors.borderLight,
+                                                }
+                                            ]}
                                         >
                                             <StyledText
                                                 variant={value === 'minutes' ? 'semibold' : 'medium'}
-                                                style={{ color: value === 'minutes' ? '#FFFFFF' : '#64748B' }}
+                                                style={{ color: value === 'minutes' ? '#FFFFFF' : colors.textMuted }}
                                             >
                                                 Minutes
                                             </StyledText>
@@ -225,20 +240,17 @@ export default function AddCommitScreen() {
                                         
                                         <TouchableOpacity
                                             onPress={() => handleTimeUnitSelect('hours')}
-                                            style={{
-                                                flex: 1,
-                                                paddingVertical: 12,
-                                                paddingHorizontal: 16,
-                                                backgroundColor: value === 'hours' ? '#7C3AED' : '#FFFFFF',
-                                                borderRadius: 16,
-                                                borderWidth: 2,
-                                                borderColor: value === 'hours' ? '#7C3AED' : '#E5E7EB',
-                                                alignItems: 'center',
-                                            }}
+                                            style={[
+                                                styles.timeUnitButton,
+                                                {
+                                                    backgroundColor: value === 'hours' ? '#7C3AED' : colors.surface,
+                                                    borderColor: value === 'hours' ? '#7C3AED' : colors.borderLight,
+                                                }
+                                            ]}
                                         >
                                             <StyledText
                                                 variant={value === 'hours' ? 'semibold' : 'medium'}
-                                                style={{ color: value === 'hours' ? '#FFFFFF' : '#64748B' }}
+                                                style={{ color: value === 'hours' ? '#FFFFFF' : colors.textMuted }}
                                             >
                                                 Hours
                                             </StyledText>
@@ -246,20 +258,17 @@ export default function AddCommitScreen() {
                                         
                                         <TouchableOpacity
                                             onPress={() => handleTimeUnitSelect('days')}
-                                            style={{
-                                                flex: 1,
-                                                paddingVertical: 12,
-                                                paddingHorizontal: 16,
-                                                backgroundColor: value === 'days' ? '#7C3AED' : '#FFFFFF',
-                                                borderRadius: 16,
-                                                borderWidth: 2,
-                                                borderColor: value === 'days' ? '#7C3AED' : '#E5E7EB',
-                                                alignItems: 'center',
-                                            }}
+                                            style={[
+                                                styles.timeUnitButton,
+                                                {
+                                                    backgroundColor: value === 'days' ? '#7C3AED' : colors.surface,
+                                                    borderColor: value === 'days' ? '#7C3AED' : colors.borderLight,
+                                                }
+                                            ]}
                                         >
                                             <StyledText
                                                 variant={value === 'days' ? 'semibold' : 'medium'}
-                                                style={{ color: value === 'days' ? '#FFFFFF' : '#64748B' }}
+                                                style={{ color: value === 'days' ? '#FFFFFF' : colors.textMuted }}
                                             >
                                                 Days
                                             </StyledText>
@@ -270,38 +279,41 @@ export default function AddCommitScreen() {
                         />
                         
                         {errors.timeSpent && (
-                            <StyledText variant="medium" className="text-red-500 text-sm mt-1">
+                            <StyledText variant="medium" style={styles.errorText}>
                                 {errors.timeSpent.message}
                             </StyledText>
                         )}
                     </View>
 
                     {/* Difficulty Selector */}
-                    <View className="mb-4">
-                        <StyledText variant="semibold" className="text-primary text-lg mb-2">
+                    <View style={styles.fieldContainer}>
+                        <StyledText variant="semibold" style={[styles.fieldLabel, { color: colors.text }]}>
                             Difficulty
                         </StyledText>
-                        <View className="flex-row gap-3">
+                        <View style={styles.difficultyRow}>
                             {(['easy', 'medium', 'hard'] as DifficultyLevel[]).map((level) => (
                                 <TouchableOpacity
                                     key={level}
                                     onPress={() => handleDifficultySelect(level)}
-                                    className={`flex-1 rounded-2xl py-4 items-center justify-center border-2 ${
-                                        difficulty === level
-                                            ? 'border-action bg-action/10'
-                                            : 'border-gray-200 bg-white'
-                                    }`}
+                                    style={[
+                                        styles.difficultyButton,
+                                        {
+                                            backgroundColor: difficulty === level ? colors.actionOpacity10 : colors.surface,
+                                            borderColor: difficulty === level ? colors.action : colors.border,
+                                        }
+                                    ]}
                                 >
-                                    <StyledText className="text-3xl mb-1">
+                                    <StyledText style={styles.difficultyEmoji}>
                                         {getDifficultyIcon(level)}
                                     </StyledText>
                                     <StyledText
                                         variant={difficulty === level ? 'semibold' : 'medium'}
-                                        className={`capitalize ${
-                                            difficulty === level
-                                                ? 'text-action'
-                                                : 'text-primary/60'
-                                        }`}
+                                        style={[
+                                            styles.difficultyText,
+                                            {
+                                                color: difficulty === level ? colors.action : colors.textSecondary,
+                                            }
+                                        ]}
                                     >
                                         {level}
                                     </StyledText>
@@ -311,8 +323,8 @@ export default function AddCommitScreen() {
                     </View>
 
                     {/* Description Input */}
-                    <View className="mb-4">
-                        <StyledText variant="semibold" className="text-primary text-lg mb-2">
+                    <View style={styles.fieldContainer}>
+                        <StyledText variant="semibold" style={[styles.fieldLabel, { color: colors.text }]}>
                             Description *
                         </StyledText>
                         <Controller
@@ -324,16 +336,24 @@ export default function AddCommitScreen() {
                                     onChangeText={onChange}
                                     onBlur={onBlur}
                                     placeholder="Describe what you accomplished, challenges faced, or lessons learned..."
-                                    placeholderTextColor="#94a3b8"
+                                    placeholderTextColor={colors.textMuted}
                                     multiline
                                     numberOfLines={6}
                                     textAlignVertical="top"
-                                    className="bg-white rounded-2xl px-4 py-4 text-primary font-hubot text-base border border-gray-200 min-h-[150px]"
+                                    style={[
+                                        styles.textInput,
+                                        styles.descriptionInput,
+                                        {
+                                            backgroundColor: colors.surface,
+                                            color: colors.text,
+                                            borderColor: colors.border,
+                                        }
+                                    ]}
                                 />
                             )}
                         />
                         {errors.description && (
-                            <StyledText variant="medium" className="text-red-500 text-sm mt-1">
+                            <StyledText variant="medium" style={styles.errorText}>
                                 {errors.description.message}
                             </StyledText>
                         )}
@@ -351,3 +371,96 @@ export default function AddCommitScreen() {
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    keyboardView: {
+        flex: 1,
+    },
+    header: {
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    headerTitle: {
+        fontSize: 24,
+    },
+    saveButton: {
+        backgroundColor: '#7C3AED',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    saveButtonText: {
+        color: '#FFFFFF',
+    },
+    scrollView: {
+        flex: 1,
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+    },
+    fieldContainer: {
+        marginBottom: 16,
+    },
+    fieldLabel: {
+        fontSize: 18,
+        marginBottom: 8,
+    },
+    textInput: {
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        fontSize: 16,
+        fontFamily: 'HubotSans-Regular',
+        borderWidth: 1,
+    },
+    timeInput: {
+        marginBottom: 12,
+    },
+    descriptionInput: {
+        minHeight: 150,
+    },
+    errorText: {
+        color: '#EF4444',
+        fontSize: 14,
+        marginTop: 4,
+    },
+    timeUnitRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    timeUnitButton: {
+        flex: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 16,
+        borderWidth: 2,
+        alignItems: 'center',
+    },
+    difficultyRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    difficultyButton: {
+        flex: 1,
+        borderRadius: 16,
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+    },
+    difficultyEmoji: {
+        fontSize: 32,
+        marginBottom: 4,
+    },
+    difficultyText: {
+        textTransform: 'capitalize',
+    },
+});

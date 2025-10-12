@@ -1,8 +1,9 @@
 import StyledText from '@/components/ui/StyledText';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { Modal, Pressable, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface AlertButton {
 	text: string;
@@ -12,7 +13,7 @@ interface AlertButton {
 
 interface AlertProps {
 	visible: boolean;
-	title: string;
+	title?: string;
 	message?: string;
 	icon?: keyof typeof Ionicons.glyphMap;
 	iconColor?: string;
@@ -29,6 +30,8 @@ const Alert = ({
 	buttons = [{ text: 'OK', style: 'default' }],
 	onClose,
 }: AlertProps) => {
+	const { colors } = useThemedStyles();
+
 	const handleButtonPress = (button: AlertButton) => {
 		if (button.onPress) {
 			button.onPress();
@@ -36,25 +39,25 @@ const Alert = ({
 		onClose();
 	};
 
-	const getButtonStyles = (style?: string) => {
+	const getButtonBackgroundColor = (style?: string) => {
 		switch (style) {
 			case 'cancel':
-				return 'bg-gray-200';
+				return colors.neutral;
 			case 'destructive':
-				return 'bg-red-500';
+				return '#ef4444';
 			default:
-				return 'bg-action';
+				return '#7C3AED';
 		}
 	};
 
-	const getButtonTextStyles = (style?: string) => {
+	const getButtonTextColor = (style?: string) => {
 		switch (style) {
 			case 'cancel':
-				return 'text-primary';
+				return colors.text;
 			case 'destructive':
-				return 'text-white';
+				return '#fff';
 			default:
-				return 'text-white';
+				return '#fff';
 		}
 	};
 
@@ -67,57 +70,73 @@ const Alert = ({
 			statusBarTranslucent
 		>
 			{/* Change status bar style when modal is visible */}
-			{visible && <StatusBar style="light" backgroundColor="rgba(0,0,0,0.5)" />}
-			
+			{visible && (
+				<StatusBar style="light" backgroundColor="rgba(0,0,0,0.5)" />
+			)}
+
 			<Pressable
-				className="flex-1 bg-black/50 justify-center items-center px-6"
+				style={styles.overlay}
 				onPress={onClose}
 			>
 				<Pressable
-					className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl"
+					style={[styles.alertBox, { backgroundColor: colors.surface }]}
 					onPress={(e) => e.stopPropagation()}
 				>
 					{/* Icon */}
 					{icon && (
-						<View className="items-center mb-4">
+						<View style={styles.iconContainer}>
 							<View
-								className="w-16 h-16 rounded-full items-center justify-center"
-								style={{ backgroundColor: `${iconColor}20` }}
+								style={[
+									styles.iconCircle,
+									{ backgroundColor: `${iconColor}20` }
+								]}
 							>
-								<Ionicons name={icon} size={32} color={iconColor} />
+								<Ionicons
+									name={icon}
+									size={32}
+									color={iconColor}
+								/>
 							</View>
 						</View>
 					)}
 
 					{/* Title */}
-					<StyledText
-						variant="extrabold"
-						className="text-primary text-2xl text-center mb-2"
-					>
-						{title}
-					</StyledText>
+					{title && (
+						<StyledText
+							variant="extrabold"
+							style={[styles.title, { color: colors.text }]}
+						>
+							{title}
+						</StyledText>
+					)}
 
 					{/* Message */}
 					{message && (
 						<StyledText
-							variant="regular"
-							className="text-primary/70 text-base text-center mb-6"
+							variant="medium"
+							style={[styles.message, { color: colors.text }]}
 						>
 							{message}
 						</StyledText>
 					)}
 
 					{/* Buttons */}
-					<View className="gap-3">
+					<View style={styles.buttonsContainer}>
 						{buttons.map((button, index) => (
 							<TouchableOpacity
 								key={index}
 								onPress={() => handleButtonPress(button)}
-								className={`py-4 rounded-2xl ${getButtonStyles(button.style)}`}
+								style={[
+									styles.button,
+									{ backgroundColor: getButtonBackgroundColor(button.style) }
+								]}
 							>
 								<StyledText
 									variant="semibold"
-									className={`text-center text-lg ${getButtonTextStyles(button.style)}`}
+									style={[
+										styles.buttonText,
+										{ color: getButtonTextColor(button.style) }
+									]}
 								>
 									{button.text}
 								</StyledText>
@@ -129,5 +148,58 @@ const Alert = ({
 		</Modal>
 	);
 };
+
+const styles = StyleSheet.create({
+	overlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		justifyContent: 'center',
+		alignItems: 'center',
+		paddingHorizontal: 24,
+	},
+	alertBox: {
+		borderRadius: 24,
+		padding: 24,
+		width: '100%',
+		maxWidth: 384,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.3,
+		shadowRadius: 16,
+		elevation: 16,
+	},
+	iconContainer: {
+		alignItems: 'center',
+		marginBottom: 16,
+	},
+	iconCircle: {
+		width: 64,
+		height: 64,
+		borderRadius: 32,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	title: {
+		fontSize: 30,
+		textAlign: 'center',
+		marginBottom: 8,
+	},
+	message: {
+		fontSize: 18,
+		textAlign: 'center',
+		marginBottom: 24,
+	},
+	buttonsContainer: {
+		gap: 12,
+	},
+	button: {
+		paddingVertical: 16,
+		borderRadius: 16,
+	},
+	buttonText: {
+		textAlign: 'center',
+		fontSize: 18,
+	},
+});
 
 export default Alert;

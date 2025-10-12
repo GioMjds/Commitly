@@ -1,6 +1,7 @@
 import StyledText from '@/components/ui/StyledText';
 import { useAuth } from '@/hooks/useAuth';
 import { useGithubAuth } from '@/hooks/useGithubAuth';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from '@/store/AuthStore';
 import { type LoginSchema, loginSchema } from '@/utils/validations';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ActivityIndicator, Alert, Image, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
@@ -17,6 +18,7 @@ export default function LoginScreen() {
 	const { login } = useAuth();
 	const { loading } = useAuthStore();
 	const { signInWithGithub, request } = useGithubAuth();
+	const { colors } = useThemedStyles();
 
 	const {
 		control,
@@ -70,36 +72,40 @@ export default function LoginScreen() {
 	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-neutral">
-			<View className="flex-1 px-8 justify-center">
-				<View className="items-center">
+		<SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
+			<ScrollView 
+				style={styles.scrollView}
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
+			>
+				<View style={styles.logoContainer}>
 					<Image
 						source={require('@/assets/images/commitly1.png')}
-						className="w-72 h-72 self-center rounded-full"
+						style={styles.logo}
 						resizeMode="contain"
 					/>
 				</View>
 
-				<View className="mb-10">
+				<View style={styles.header}>
 					<StyledText
 						variant="black"
-						className="text-4xl text-center text-primary mb-2"
+						style={[styles.title, { color: colors.text }]}
 					>
 						Welcome to Commitly
 					</StyledText>
 					<StyledText
 						variant="light"
-						className="text-2xl text-center text-primary/70"
+						style={[styles.subtitle, { color: colors.textSecondary }]}
 					>
 						Sign in to continue your journey
 					</StyledText>
 				</View>
 
-				<View className="space-y-6 mb-56">
+				<View style={styles.formContainer}>
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary text-xl mb-2"
+							style={[styles.label, { color: colors.text }]}
 						>
 							Email
 						</StyledText>
@@ -110,9 +116,16 @@ export default function LoginScreen() {
 								field: { onChange, onBlur, value },
 							}) => (
 								<TextInput
-									className="bg-white rounded-2xl px-4 py-4 mb-2 text-primary border border-gray-200"
+									style={[
+										styles.input,
+										{
+											backgroundColor: colors.surface,
+											color: colors.text,
+											borderColor: colors.border,
+										}
+									]}
 									placeholder="Enter your email"
-									placeholderTextColor="#94a3b8"
+									placeholderTextColor={colors.textMuted}
 									onBlur={onBlur}
 									onChangeText={onChange}
 									value={value}
@@ -125,7 +138,7 @@ export default function LoginScreen() {
 						{errors.email && (
 							<StyledText
 								variant="light"
-								className="text-red-500 mb-4 text-sm"
+								style={styles.errorText}
 							>
 								{errors.email.message}
 							</StyledText>
@@ -135,11 +148,11 @@ export default function LoginScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary text-xl mb-2"
+							style={[styles.label, { color: colors.text }]}
 						>
 							Password
 						</StyledText>
-						<View className="relative">
+						<View style={styles.passwordContainer}>
 							<Controller
 								control={control}
 								name="password"
@@ -147,9 +160,17 @@ export default function LoginScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 mb-2 text-primary border border-gray-200 pr-12"
+										style={[
+											styles.input,
+											styles.passwordInput,
+											{
+												backgroundColor: colors.surface,
+												color: colors.text,
+												borderColor: colors.border,
+											}
+										]}
 										placeholder="Enter your password"
-										placeholderTextColor="#94a3b8"
+										placeholderTextColor={colors.textMuted}
 										onBlur={onBlur}
 										onChangeText={onChange}
 										value={value}
@@ -159,31 +180,31 @@ export default function LoginScreen() {
 								)}
 							/>
 							<TouchableOpacity
-								className="absolute right-4 top-3"
+								style={styles.eyeIcon}
 								onPress={() => setShowPassword(!showPassword)}
 							>
 								<Ionicons
 									name={showPassword ? 'eye-off' : 'eye'}
 									size={25}
-									color="#64748b"
+									color={colors.textMuted}
 								/>
 							</TouchableOpacity>
 						</View>
 						{errors.password && (
 							<StyledText
 								variant="light"
-								className="text-red-500 mt-1 text-sm"
+								style={styles.errorText}
 							>
 								{errors.password.message}
 							</StyledText>
 						)}
 					</View>
 
-					<TouchableOpacity className="items-end">
+					<TouchableOpacity style={styles.forgotPassword}>
 						<Link href="/forgot" asChild>
 							<StyledText
 								variant="medium"
-								className="text-secondary text-lg mb-4"
+								style={styles.forgotPasswordText}
 							>
 								Forgot Password?
 							</StyledText>
@@ -191,7 +212,7 @@ export default function LoginScreen() {
 					</TouchableOpacity>
 
 					<TouchableOpacity
-						className="bg-action rounded-2xl py-4 items-center shadow-xl shadow-action/30"
+						style={styles.signInButton}
 						onPress={handleSubmit(onSubmit)}
 						disabled={loading}
 					>
@@ -200,7 +221,7 @@ export default function LoginScreen() {
 						) : (
 							<StyledText
 								variant="semibold"
-								className="text-white text-lg"
+								style={styles.signInButtonText}
 							>
                                 Sign In
                             </StyledText>
@@ -208,33 +229,33 @@ export default function LoginScreen() {
 					</TouchableOpacity>
 
 					{/* Divider */}
-                    <View className="flex-row items-center my-3">
-                        <View className="flex-1 h-px bg-gray-300" />
-                        <StyledText variant="regular" className="mx-4 text-primary/50">
+                    <View style={styles.dividerRow}>
+                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                        <StyledText variant="regular" style={[styles.dividerText, { color: colors.textSecondary }]}>
                             OR
                         </StyledText>
-                        <View className="flex-1 h-px bg-gray-300" />
+                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
                     </View>
 
                     {/* GitHub Sign In Button */}
                     <TouchableOpacity
-                        className="bg-primary rounded-2xl py-4 items-center flex-row justify-center shadow-xl shadow-primary/30"
+                        style={[styles.githubButton, { backgroundColor: colors.primary }]}
                         onPress={handleGithubLogin}
                         disabled={!request || loading}
                     >
                         <Ionicons name="logo-github" size={24} color="white" />
                         <StyledText
                             variant="semibold"
-                            className="text-white text-lg ml-2"
+                            style={styles.githubButtonText}
                         >
                             Continue with GitHub
                         </StyledText>
                     </TouchableOpacity>
 
-					<View className="flex-row justify-center items-center mt-6">
+					<View style={styles.signUpRow}>
 						<StyledText
 							variant="regular"
-							className="text-primary text-xl"
+							style={[styles.signUpText, { color: colors.text }]}
 						>
 							Don&apos;t have an account?{' '}
 						</StyledText>
@@ -242,7 +263,7 @@ export default function LoginScreen() {
 							<TouchableOpacity>
 								<StyledText
 									variant="semibold"
-									className="text-secondary text-xl"
+									style={styles.signUpLink}
 								>
 									Sign Up
 								</StyledText>
@@ -250,7 +271,139 @@ export default function LoginScreen() {
 						</Link>
 					</View>
 				</View>
-			</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	scrollContent: {
+		flexGrow: 1,
+		paddingHorizontal: 32,
+		paddingVertical: 20,
+	},
+	logoContainer: {
+		alignItems: 'center',
+		marginTop: 20,
+	},
+	logo: {
+		width: 288,
+		height: 166,
+	},
+	header: {
+		marginBottom: 32,
+		marginTop: 2,
+	},
+	title: {
+		fontSize: 36,
+		textAlign: 'center',
+		marginBottom: 8,
+	},
+	subtitle: {
+		fontSize: 24,
+		textAlign: 'center',
+	},
+	formContainer: {
+		gap: 2,
+		marginBottom: 40,
+	},
+	label: {
+		fontSize: 20,
+		marginBottom: 8,
+	},
+	input: {
+		borderRadius: 16,
+		paddingHorizontal: 16,
+		paddingVertical: 16,
+		marginBottom: 8,
+		borderWidth: 1,
+		fontSize: 16,
+	},
+	passwordContainer: {
+		position: 'relative',
+	},
+	passwordInput: {
+		paddingRight: 48,
+	},
+	eyeIcon: {
+		position: 'absolute',
+		right: 16,
+		top: 12,
+	},
+	errorText: {
+		color: '#EF4444',
+		fontSize: 14,
+		marginBottom: 16,
+	},
+	forgotPassword: {
+		alignItems: 'flex-end',
+	},
+	forgotPasswordText: {
+		color: '#0EA5A4',
+		fontSize: 18,
+		marginBottom: 16,
+	},
+	signInButton: {
+		backgroundColor: '#7C3AED',
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+		shadowColor: '#7C3AED',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	signInButtonText: {
+		color: '#FFFFFF',
+		fontSize: 18,
+	},
+	dividerRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginVertical: 12,
+	},
+	dividerLine: {
+		flex: 1,
+		height: 1,
+	},
+	dividerText: {
+		marginHorizontal: 16,
+	},
+	githubButton: {
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+		flexDirection: 'row',
+		justifyContent: 'center',
+		shadowColor: '#0F172A',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	githubButtonText: {
+		color: '#FFFFFF',
+		fontSize: 18,
+		marginLeft: 8,
+	},
+	signUpRow: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginTop: 24,
+	},
+	signUpText: {
+		fontSize: 20,
+	},
+	signUpLink: {
+		color: '#0EA5A4',
+		fontSize: 20,
+	},
+});

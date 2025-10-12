@@ -1,72 +1,45 @@
 import Header from "@/components/layout/Header";
+import Alert from '@/components/ui/Alert';
 import CommitCard from "@/components/ui/CommitCard";
 import FilterBar from "@/components/ui/FilterBar";
 import StyledText from "@/components/ui/StyledText";
 import { useCommit } from "@/hooks/useCommit";
 import { useGithubCommits } from "@/hooks/useGithubCommits";
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
+import { DateRange } from "@/types/History.types";
 import { Ionicons } from "@expo/vector-icons";
 import { isAfter, parseISO, subDays, subMonths, subYears } from 'date-fns';
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HistoryScreen() {
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [selectedDateRange, setSelectedDateRange] = useState<DateRange>('all');
+    const { colors } = useThemedStyles();
+
     const { user } = useAuthStore();
     const { commits, loading } = useCommitStore();
     const { fetchCommits } = useCommit();
     const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
-    const [refreshing, setRefreshing] = useState(false);
-    
-    // Filter states
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
-    const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
-    const [selectedDateRange, setSelectedDateRange] = useState<'all' | 'week' | 'month' | 'year'>('all');
+
+    const [alertVisible, setAlertVisible] = useState<boolean>(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: '',
+        message: '',
+        icon: 'checkmark-circle-outline' as keyof typeof Ionicons.glyphMap,
+    });
 
     const isGitHubUser = user?.providerData?.some(
         (provider) => provider.providerId === 'github.com'
     );
 
-    // Extract unique tags and repos from commits
-    const availableTags = useMemo(() => {
-        const tagSet = new Set<string>();
-        commits.forEach(commit => {
-            if (commit.tag) tagSet.add(commit.tag);
-        });
-        return Array.from(tagSet);
-    }, [commits]);
-
-    const availableRepos = useMemo(() => {
-        const repoSet = new Set<string>();
-        commits.forEach(commit => {
-            if (commit.githubCommits) {
-                commit.githubCommits.forEach(ghCommit => {
-                    repoSet.add(ghCommit.repo);
-                });
-            }
-        });
-        return Array.from(repoSet);
-    }, [commits]);
-
-    // Filter commits based on selected filters
     const filteredCommits = useMemo(() => {
         let filtered = [...commits];
 
-        // Filter by tag
-        if (selectedTag) {
-            filtered = filtered.filter(commit => commit.tag === selectedTag);
-        }
-
-        // Filter by repo
-        if (selectedRepo) {
-            filtered = filtered.filter(commit => 
-                commit.githubCommits?.some(ghCommit => ghCommit.repo === selectedRepo)
-            );
-        }
-
-        // Filter by date range
         if (selectedDateRange !== 'all') {
             const now = new Date();
             let cutoffDate: Date;
@@ -91,7 +64,7 @@ export default function HistoryScreen() {
         }
 
         return filtered;
-    }, [commits, selectedTag, selectedRepo, selectedDateRange]);
+    }, [commits, selectedDateRange]);
 
     useFocusEffect(
         useCallback(() => {
@@ -111,42 +84,50 @@ export default function HistoryScreen() {
         const result = await syncGithubCommits();
 
         if (result.success) await fetchCommits();
+
+        // Show alert similar to Settings screen
+        setAlertConfig({
+            title: result.success ? 'Success' : 'Error',
+            message: result.message,
+            icon: result.success ? 'checkmark-circle-outline' : 'alert-circle-outline',
+        });
+        setAlertVisible(true);
     };
 
     const renderEmpty = () => (
-        <View className="items-center py-20">
+        <View style={styles.emptyState}>
             {isGitHubUser ? (
                 <>
                     <Ionicons name="logo-github" size={60} color="#7C3AED" />
-                    <StyledText variant="semibold" className="text-primary text-2xl mb-2 mt-4">
+                    <StyledText variant="semibold" style={[styles.emptyTitle, { color: colors.text }]}>
                         No commits synced yet
                     </StyledText>
-                    <StyledText variant="light" className="text-primary/60 text-center mb-6 px-8">
+                    <StyledText variant="light" style={[styles.emptyMessage, { color: colors.textMuted }]}>
                         Go to Settings and sync your GitHub commits to start building your streak!
                     </StyledText>
                     <TouchableOpacity
                         onPress={() => router.push('/settings')}
-                        className="bg-action rounded-2xl px-6 py-3"
+                        style={styles.actionButton}
                     >
-                        <StyledText variant="semibold" className="text-white text-lg">
+                        <StyledText variant="semibold" style={styles.actionButtonText}>
                             Go to Settings
                         </StyledText>
                     </TouchableOpacity>
                 </>
             ) : (
                 <>
-                    <StyledText className="text-6xl mb-4">🔗</StyledText>
-                    <StyledText variant="semibold" className="text-primary text-2xl mb-2">
+                    <StyledText style={styles.emptyEmoji}>🔗</StyledText>
+                    <StyledText variant="semibold" style={[styles.emptyTitle, { color: colors.text }]}>
                         Connect GitHub First
                     </StyledText>
-                    <StyledText variant="light" className="text-primary/60 text-center mb-6 px-8">
+                    <StyledText variant="light" style={[styles.emptyMessage, { color: colors.textMuted }]}>
                         Sign in with GitHub to automatically track your coding activity!
                     </StyledText>
                     <TouchableOpacity
                         onPress={() => router.push('/settings')}
-                        className="bg-action rounded-2xl px-6 py-3"
+                        style={styles.actionButton}
                     >
-                        <StyledText variant="semibold" className="text-white text-lg">
+                        <StyledText variant="semibold" style={styles.actionButtonText}>
                             Go to Settings
                         </StyledText>
                     </TouchableOpacity>
@@ -157,9 +138,9 @@ export default function HistoryScreen() {
 
     if (loading && commits.length === 0) {
         return (
-            <SafeAreaView className="flex-1 bg-neutral justify-center items-center">
+            <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: colors.neutral }]}>
                 <ActivityIndicator size="large" color="#0891b2" />
-                <StyledText variant="medium" className="text-primary mt-4">
+                <StyledText variant="medium" style={[styles.loadingText, { color: colors.text }]}>
                     Loading your commits...
                 </StyledText>
             </SafeAreaView>
@@ -167,11 +148,11 @@ export default function HistoryScreen() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-neutral">
-            <View className="flex-1 px-6 py-6">
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
+            <View style={styles.content}>
                 {/* Header */}
-                <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-1">
+                <View style={styles.headerRow}>
+                    <View style={styles.headerContent}>
                         <Header 
                             title="Commit History" 
                             subtitle="Your journey of continuous improvement" 
@@ -181,13 +162,7 @@ export default function HistoryScreen() {
 
                 {/* Filter Bar */}
                 <FilterBar
-                    tags={availableTags}
-                    repos={availableRepos}
-                    selectedTag={selectedTag}
-                    selectedRepo={selectedRepo}
                     selectedDateRange={selectedDateRange}
-                    onTagChange={setSelectedTag}
-                    onRepoChange={setSelectedRepo}
                     onDateRangeChange={setSelectedDateRange}
                 />
 
@@ -213,30 +188,107 @@ export default function HistoryScreen() {
                     <TouchableOpacity
                         onPress={handleSyncNow}
                         disabled={syncLoading || loading}
-                        className={`absolute bottom-6 right-6 rounded-full p-4 shadow-lg flex-row items-center ${
-                            syncLoading ? 'bg-gray-400' : 'bg-action'
-                        }`}
-                        style={{
-                            elevation: 3,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 2, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                        }}
+                        style={[
+                            styles.floatingButton,
+                            {
+                                backgroundColor: syncLoading ? '#9ca3af' : '#7C3AED'
+                            }
+                        ]}
                     >
                         {syncLoading ? (
                             <ActivityIndicator size="small" color="#E6EEF2" />
                         ) : (
                             <>
                                 <Ionicons name="sync" size={24} color="#E6EEF2" />
-                                <StyledText className="ml-2 text-neutral" variant="medium">
+                                <StyledText style={styles.floatingButtonText} variant="medium">
                                     Sync Latest Commit
                                 </StyledText>
                             </>
                         )}
                     </TouchableOpacity>
                 )}
+                <Alert
+                    visible={alertVisible}
+                    title={alertConfig.title}
+                    message={alertConfig.message}
+                    icon={alertConfig.icon}
+                    onClose={() => setAlertVisible(false)}
+                    buttons={[{ text: 'OK', style: 'default' }]}
+                />
             </View>
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        paddingHorizontal: 24,
+    },
+    content: {
+        flex: 1,
+    },
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    headerContent: {
+        flex: 1,
+    },
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 80,
+    },
+    emptyEmoji: {
+        fontSize: 64,
+        marginBottom: 16,
+    },
+    emptyTitle: {
+        fontSize: 24,
+        marginBottom: 8,
+        marginTop: 16,
+    },
+    emptyMessage: {
+        textAlign: 'center',
+        marginBottom: 24,
+        paddingHorizontal: 32,
+        opacity: 0.6,
+    },
+    actionButton: {
+        backgroundColor: '#7C3AED',
+        borderRadius: 16,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+    },
+    actionButtonText: {
+        color: '#fff',
+        fontSize: 18,
+    },
+    floatingButton: {
+        position: 'absolute',
+        bottom: 24,
+        right: 8,
+        borderRadius: 9999,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    floatingButtonText: {
+        marginLeft: 8,
+        color: '#E6EEF2',
+    },
+});

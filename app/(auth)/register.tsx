@@ -1,6 +1,7 @@
 import StyledText from '@/components/ui/StyledText';
 import { useAuth } from '@/hooks/useAuth';
 import { useGithubAuth } from '@/hooks/useGithubAuth';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { RegisterFormData } from '@/types/FirebaseAuth.types';
 import { registerSchema } from '@/utils/validations';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,16 +9,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Image, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {
 	const [showPassword, setShowPassword] = useState<boolean>(false);
-	const [showConfirmPassword, setShowConfirmPassword] =
-		useState<boolean>(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
 	const { register } = useAuth();
 	const { signInWithGithub, request } = useGithubAuth();
+	const { colors } = useThemedStyles();
 
 	const {
 		control,
@@ -65,36 +66,40 @@ export default function RegisterScreen() {
 	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-neutral">
-			<View className="flex-1 px-8 justify-center">
-				<View className="items-center">
+		<SafeAreaView style={[styles.container, { backgroundColor: colors.neutral }]}>
+			<ScrollView 
+				style={styles.scrollView}
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
+			>
+				<View style={styles.logoContainer}>
 					<Image
 						source={require('@/assets/images/commitly1.png')}
-						className="w-48 h-48 self-center rounded-full"
+						style={styles.logo}
 						resizeMode="center"
 					/>
 				</View>
 
-				<View className="mb-4">
+				<View style={styles.header}>
 					<StyledText
 						variant="black"
-						className="text-4xl text-center text-primary mb-2"
+						style={[styles.title, { color: colors.text }]}
 					>
 						Create Account
 					</StyledText>
 					<StyledText
 						variant="light"
-						className="text-2xl text-center text-primary/70"
+						style={[styles.subtitle, { color: colors.textSecondary }]}
 					>
 						Join us and start your journey
 					</StyledText>
 				</View>
 
-				<View className="space-y-6 mb-56">
+				<View style={styles.formContainer}>
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary text-xl mb-2"
+							style={[styles.label, { color: colors.text }]}
 						>
 							Email
 						</StyledText>
@@ -105,7 +110,11 @@ export default function RegisterScreen() {
 								field: { onChange, onBlur, value },
 							}) => (
 								<TextInput
-									className="bg-white rounded-2xl px-4 py-4 mb-2 font-hubot text-primary border border-gray-200"
+									style={[styles.input, { 
+										backgroundColor: colors.surface,
+										color: colors.text,
+										borderColor: colors.border
+									}]}
 									placeholder="Enter your email"
 									placeholderTextColor="#94a3b8"
 									onBlur={onBlur}
@@ -120,7 +129,7 @@ export default function RegisterScreen() {
 						{errors.email && (
 							<StyledText
 								variant="light"
-								className="text-red-500 mb-4 text-lg"
+								style={styles.errorText}
 							>
 								{errors.email.message}
 							</StyledText>
@@ -130,11 +139,11 @@ export default function RegisterScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary text-xl mb-2"
+							style={[styles.label, { color: colors.text }]}
 						>
 							Password
 						</StyledText>
-						<View className="relative">
+						<View style={styles.passwordContainer}>
 							<Controller
 								control={control}
 								name="password"
@@ -142,7 +151,11 @@ export default function RegisterScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 mb-2 font-hubot text-primary border border-gray-200 pr-12"
+										style={[styles.passwordInput, { 
+											backgroundColor: colors.surface,
+											color: colors.text,
+											borderColor: colors.border
+										}]}
 										placeholder="Create a password"
 										placeholderTextColor="#94a3b8"
 										onBlur={onBlur}
@@ -154,7 +167,7 @@ export default function RegisterScreen() {
 								)}
 							/>
 							<TouchableOpacity
-								className="absolute right-4 top-3"
+								style={styles.eyeIcon}
 								onPress={() => setShowPassword(!showPassword)}
 							>
 								<Ionicons
@@ -167,7 +180,7 @@ export default function RegisterScreen() {
 						{errors.password && (
 							<StyledText
 								variant="light"
-								className="text-red-500 mb-4 text-lg"
+								style={styles.errorText}
 							>
 								{errors.password.message}
 							</StyledText>
@@ -177,11 +190,11 @@ export default function RegisterScreen() {
 					<View>
 						<StyledText
 							variant="medium"
-							className="text-primary text-xl mb-2"
+							style={[styles.label, { color: colors.text }]}
 						>
 							Confirm Password
 						</StyledText>
-						<View className="relative">
+						<View style={styles.passwordContainer}>
 							<Controller
 								control={control}
 								name="confirmPassword"
@@ -189,7 +202,11 @@ export default function RegisterScreen() {
 									field: { onChange, onBlur, value },
 								}) => (
 									<TextInput
-										className="bg-white rounded-2xl px-4 py-4 mb-2 font-hubot text-primary border border-gray-200 pr-12"
+										style={[styles.passwordInput, { 
+											backgroundColor: colors.surface,
+											color: colors.text,
+											borderColor: colors.border
+										}]}
 										placeholder="Confirm your password"
 										placeholderTextColor="#94a3b8"
 										onBlur={onBlur}
@@ -201,15 +218,11 @@ export default function RegisterScreen() {
 								)}
 							/>
 							<TouchableOpacity
-								className="absolute right-4 top-3"
-								onPress={() =>
-									setShowConfirmPassword(!showConfirmPassword)
-								}
+								style={styles.eyeIcon}
+								onPress={() => setShowConfirmPassword(!showConfirmPassword)}
 							>
 								<Ionicons
-									name={
-										showConfirmPassword ? 'eye-off' : 'eye'
-									}
+									name={showConfirmPassword ? 'eye-off' : 'eye'}
 									size={25}
 									color="#64748b"
 								/>
@@ -218,7 +231,7 @@ export default function RegisterScreen() {
 						{errors.confirmPassword && (
 							<StyledText
 								variant="light"
-								className="text-red-500 mb-4 text-lg"
+								style={styles.errorText}
 							>
 								{errors.confirmPassword.message}
 							</StyledText>
@@ -226,13 +239,13 @@ export default function RegisterScreen() {
 					</View>
 
 					<TouchableOpacity
-						className="bg-action rounded-2xl py-4 items-center shadow-lg mt-2 shadow-action/30"
+						style={styles.registerButton}
 						onPress={handleSubmit(onSubmit)}
 						disabled={isSubmitting}
 					>
 						<StyledText
 							variant="semibold"
-							className="text-white text-lg"
+							style={styles.registerButtonText}
 						>
 							{isSubmitting
 								? 'Creating Account...'
@@ -241,41 +254,41 @@ export default function RegisterScreen() {
 					</TouchableOpacity>
 
 					{/* Divider */}
-					<View className="flex-row items-center my-3">
-						<View className="flex-1 h-px bg-gray-300" />
+					<View style={styles.dividerRow}>
+						<View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
 						<StyledText
 							variant="regular"
-							className="mx-4 text-primary/50"
+							style={[styles.dividerText, { color: colors.textMuted }]}
 						>
 							OR
 						</StyledText>
-						<View className="flex-1 h-px bg-gray-300" />
+						<View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
 					</View>
 
 					{/* GitHub Sign Up Button */}
 					<TouchableOpacity
-						className="bg-primary rounded-2xl py-4 items-center flex-row justify-center shadow-lg shadow-primary/30"
+						style={[styles.githubButton, { backgroundColor: colors.primary }]}
 						onPress={handleGithubSignup}
 						disabled={!request || isSubmitting}
 					>
 						<Ionicons name="logo-github" size={24} color="white" />
 						<StyledText
 							variant="semibold"
-							className="text-white text-lg ml-2"
+							style={styles.githubButtonText}
 						>
 							Sign up with GitHub
 						</StyledText>
 					</TouchableOpacity>
 
-					<View className="flex-row justify-center items-center mt-6">
-						<StyledText variant="regular" className="text-primary text-xl">
+					<View style={styles.signInRow}>
+						<StyledText variant="regular" style={[styles.signInText, { color: colors.text }]}>
 							Already have an account?{' '}
 						</StyledText>
 						<Link href="/login" asChild>
 							<TouchableOpacity>
 								<StyledText
 									variant="semibold"
-									className="text-secondary text-xl"
+									style={styles.signInLink}
 								>
 									Sign In
 								</StyledText>
@@ -283,7 +296,138 @@ export default function RegisterScreen() {
 						</Link>
 					</View>
 				</View>
-			</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	scrollContent: {
+		flexGrow: 1,
+		paddingHorizontal: 32,
+		paddingVertical: 20,
+	},
+	logoContainer: {
+		alignItems: 'center',
+		marginBottom: 2,
+	},
+	logo: {
+		width: 288,
+		height: 166,
+	},
+	header: {
+		marginBottom: 32,
+	},
+	title: {
+		fontSize: 36,
+		marginBottom: 4,
+	},
+	subtitle: {
+		fontSize: 24,
+	},
+	formContainer: {
+		gap: 6,
+	},
+	label: {
+		fontSize: 20,
+		marginBottom: 8,
+	},
+	input: {
+		borderRadius: 16,
+		paddingHorizontal: 16,
+		paddingVertical: 16,
+		marginBottom: 8,
+		borderWidth: 1,
+	},
+	passwordContainer: {
+		position: 'relative',
+	},
+	passwordInput: {
+		borderRadius: 16,
+		paddingHorizontal: 16,
+		paddingVertical: 16,
+		paddingRight: 48,
+		marginBottom: 8,
+		borderWidth: 1,
+	},
+	eyeIcon: {
+		position: 'absolute',
+		right: 16,
+		top: 12,
+	},
+	errorText: {
+		color: '#EF4444',
+		marginBottom: 16,
+		fontSize: 18,
+	},
+	registerButton: {
+		backgroundColor: '#7C3AED',
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+		marginTop: 8,
+		shadowColor: '#7C3AED',
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	registerButtonText: {
+		color: '#FFFFFF',
+		fontSize: 18,
+	},
+	dividerRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginVertical: 2,
+	},
+	dividerLine: {
+		flex: 1,
+		height: 1,
+	},
+	dividerText: {
+		marginHorizontal: 16,
+	},
+	githubButton: {
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+		flexDirection: 'row',
+		justifyContent: 'center',
+		shadowColor: '#0F172A',
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
+	},
+	githubButtonText: {
+		color: '#FFFFFF',
+		fontSize: 18,
+		marginLeft: 8,
+	},
+	signInRow: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginTop: 24,
+	},
+	signInText: {
+		fontSize: 20,
+	},
+	signInLink: {
+		color: '#0EA5A4',
+		fontSize: 20,
+	},
+});

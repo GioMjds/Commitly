@@ -1,4 +1,5 @@
-export type MoodType = '😄' | '😐' | '😞' | '😊' | '😔';
+type TimeUnit = 'minutes' | 'hours' | 'days';
+type Difficulty = 'easy' | 'medium' | 'hard'; 
 
 export interface GitHubCommitDetail {
     sha: string;
@@ -13,18 +14,15 @@ export interface DailyCommit {
     userId: string;
     note: string;
     tag?: string;
-    mood?: MoodType;
     createdAt: Date;
     updatedAt: Date;
-    date: string; // YYYY-MM-DD format for easy querying
-    githubCommits?: GitHubCommitDetail[]; // GitHub commit details if synced from GitHub
-    // Manual commit fields (note-taking system)
+    date: string;
+    githubCommits?: GitHubCommitDetail[];
     title?: string;
-    timeSpent?: number; // in minutes
-    timeUnit?: 'minutes' | 'hours' | 'days';
-    difficulty?: 'easy' | 'medium' | 'hard';
+    timeSpent?: number;
+    timeUnit?: TimeUnit;
+    difficulty?: Difficulty;
     description?: string;
-    tags?: string[]; // array of tags
 }
 
 export interface StreakData {
@@ -37,17 +35,13 @@ export interface DashboardStats {
     totalCommits: number;
     currentStreak: number;
     longestStreak: number;
-    topTags: { tag: string; count: number }[];
-    moodTrend: { mood: MoodType; count: number }[];
 }
 
 export interface CommitFormData {
     note: string;
-    tag?: string;
-    mood?: MoodType;
     title?: string;
     timeSpent?: number;
-    timeUnit?: 'minutes' | 'hours' | 'days';
-    difficulty?: 'easy' | 'medium' | 'hard';
+    timeUnit?: TimeUnit;
+    difficulty?: Difficulty;
     description?: string;
 }
