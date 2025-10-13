@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
 	},
 	totalCommitsNumber: {
 		color: '#FAFAFA',
-		fontSize: 72,
+		fontSize: 96,
 	},
 	totalCommitsLabel: {
 		color: '#FAFAFA',

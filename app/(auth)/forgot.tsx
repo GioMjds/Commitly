@@ -25,6 +25,7 @@ export default function ForgotPasswordScreen() {
 		handleSubmit,
 		formState: { errors, isSubmitting },
 	} = useForm<ForgotPasswordSchema>({
+		mode: 'onBlur',
 		resolver: zodResolver(forgotPasswordSchema),
 		defaultValues: {
 			email: '',
@@ -114,7 +115,7 @@ export default function ForgotPasswordScreen() {
 							/>
 							{errors.email && (
 								<StyledText
-									variant="light"
+									variant="medium"
 									style={styles.errorText}
 								>
 									{errors.email.message}
@@ -183,11 +184,13 @@ const styles = StyleSheet.create({
 		marginBottom: 24,
 	},
 	title: {
-		fontSize: 36,
+		fontSize: 42,
 		marginBottom: 8,
+		textAlign: 'center'
 	},
 	subtitle: {
-		fontSize: 18,
+		fontSize: 22,
+		textAlign: 'center'
 	},
 	formContainer: {
 		gap: 24,
@@ -199,13 +202,12 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		paddingHorizontal: 16,
 		paddingVertical: 16,
-		marginBottom: 16,
+		marginBottom: 4,
 		borderWidth: 1,
 		fontSize: 16,
 	},
 	errorText: {
 		color: '#EF4444',
-		marginTop: 4,
 		fontSize: 14,
 	},
 	resetButton: {
@@ -227,7 +229,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginTop: 24,
 	},
 	backToSignInText: {
 		color: '#0EA5A4',

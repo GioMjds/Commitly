@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {
@@ -17,7 +17,7 @@ export default function RegisterScreen() {
 	const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
 	const { register } = useAuth();
-	const { signInWithGithub, request } = useGithubAuth();
+	const { signInWithGithub, request, githubLoading } = useGithubAuth();
 	const { colors } = useThemedStyles();
 
 	const {
@@ -269,15 +269,21 @@ export default function RegisterScreen() {
 					<TouchableOpacity
 						style={[styles.githubButton, { backgroundColor: colors.primary }]}
 						onPress={handleGithubSignup}
-						disabled={!request || isSubmitting}
+						disabled={!request || githubLoading}
 					>
-						<Ionicons name="logo-github" size={24} color="white" />
-						<StyledText
-							variant="semibold"
-							style={styles.githubButtonText}
-						>
-							Sign up with GitHub
-						</StyledText>
+						{githubLoading ? (
+							<ActivityIndicator size="small" color="#FFFFFF" />
+						) : (
+							<>
+								<Ionicons name="logo-github" size={24} color="white" />
+								<StyledText
+									variant="semibold"
+									style={styles.githubButtonText}
+								>
+									Sign up with GitHub
+								</StyledText>
+							</>
+						)}
 					</TouchableOpacity>
 
 					<View style={styles.signInRow}>

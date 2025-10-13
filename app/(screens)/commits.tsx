@@ -3,6 +3,7 @@ import Alert from '@/components/ui/Alert';
 import CommitCard from "@/components/ui/CommitCard";
 import FilterBar from "@/components/ui/FilterBar";
 import StyledText from "@/components/ui/StyledText";
+import { useCallItADay } from "@/hooks/useCallItADay";
 import { useCommit } from "@/hooks/useCommit";
 import { useGithubCommits } from "@/hooks/useGithubCommits";
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -25,8 +26,10 @@ export default function HistoryScreen() {
     const { commits, loading } = useCommitStore();
     const { fetchCommits } = useCommit();
     const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
+    const { callItADay, canCallItADay, loading: callItADayLoading } = useCallItADay();
 
     const [alertVisible, setAlertVisible] = useState<boolean>(false);
+    const [confirmCallItADayVisible, setConfirmCallItADayVisible] = useState<boolean>(false);
     const [alertConfig, setAlertConfig] = useState({
         title: '',
         message: '',
@@ -79,17 +82,29 @@ export default function HistoryScreen() {
         setRefreshing(false);
     }, [user, fetchCommits]);
 
-    const handleSyncNow = async () => {
-        if (!isGitHubUser) return;
-        const result = await syncGithubCommits();
+    const handleCallItADayPress = () => {
+        // Show confirmation dialog
+        setConfirmCallItADayVisible(true);
+    };
 
-        if (result.success) await fetchCommits();
+    const handleConfirmCallItADay = async () => {
+        setConfirmCallItADayVisible(false);
+        
+        // First sync GitHub commits
+        if (isGitHubUser) {
+            const syncResult = await syncGithubCommits();
+            if (syncResult.success) {
+                await fetchCommits();
+            }
+        }
 
-        // Show alert similar to Settings screen
+        // Then mark the day as complete
+        const result = await callItADay();
+
         setAlertConfig({
-            title: result.success ? 'Success' : 'Error',
+            title: result.success ? 'Day Complete! 🎉' : 'Oops!',
             message: result.message,
-            icon: result.success ? 'checkmark-circle-outline' : 'alert-circle-outline',
+            icon: result.success ? 'moon' : 'alert-circle-outline',
         });
         setAlertVisible(true);
     };
@@ -154,11 +169,26 @@ export default function HistoryScreen() {
                 <View style={styles.headerRow}>
                     <View style={styles.headerContent}>
                         <Header 
-                            title="Commit History" 
+                            title="Your Commits" 
                             subtitle="Your journey of continuous improvement" 
                         />
                     </View>
                 </View>
+
+                {/* "Day Complete" Banner - shown when user has called it a day */}
+                {isGitHubUser && !canCallItADay() && (
+                    <View style={[styles.dayCompleteBanner, { backgroundColor: colors.actionOpacity10, borderColor: colors.action }]}>
+                        <Ionicons name="moon" size={24} color="#7C3AED" />
+                        <View style={styles.bannerTextContainer}>
+                            <StyledText variant="semibold" style={[styles.bannerTitle, { color: colors.action }]}>
+                                Day Complete! 🌙
+                            </StyledText>
+                            <StyledText variant="medium" style={[styles.bannerSubtitle, { color: colors.textSecondary }]}>
+                                Great work today! See you tomorrow for another productive day.
+                            </StyledText>
+                        </View>
+                    </View>
+                )}
 
                 {/* Filter Bar */}
                 <FilterBar
@@ -183,30 +213,54 @@ export default function HistoryScreen() {
                     }
                 />
 
-                {/* Floating Sync Button */}
-                {isGitHubUser && (
+                {/* Floating "Call it a Day" Button */}
+                {isGitHubUser && canCallItADay() && (
                     <TouchableOpacity
-                        onPress={handleSyncNow}
-                        disabled={syncLoading || loading}
+                        onPress={handleCallItADayPress}
+                        disabled={syncLoading || loading || callItADayLoading}
                         style={[
                             styles.floatingButton,
                             {
-                                backgroundColor: syncLoading ? '#9ca3af' : '#7C3AED'
+                                backgroundColor: (syncLoading || callItADayLoading) ? '#9ca3af' : '#7C3AED'
                             }
                         ]}
                     >
-                        {syncLoading ? (
+                        {(syncLoading || callItADayLoading) ? (
                             <ActivityIndicator size="small" color="#E6EEF2" />
                         ) : (
                             <>
-                                <Ionicons name="sync" size={24} color="#E6EEF2" />
-                                <StyledText style={styles.floatingButtonText} variant="medium">
-                                    Sync Latest Commit
+                                <Ionicons name="moon" size={24} color="#E6EEF2" />
+                                <StyledText style={styles.floatingButtonText} variant="semibold">
+                                    Call it a Day
                                 </StyledText>
                             </>
                         )}
                     </TouchableOpacity>
                 )}
+
+                {/* Confirmation Alert for "Call it a Day" */}
+                <Alert
+                    visible={confirmCallItADayVisible}
+                    title="Ready to Call it a Day?"
+                    message="This will sync your latest commits and mark today as complete. You won't be able to use this button again until tomorrow. Are you sure you're done for the day?"
+                    icon="moon-outline"
+                    iconColor="#7C3AED"
+                    onClose={() => setConfirmCallItADayVisible(false)}
+                    buttons={[
+                        {
+                            text: 'Not Yet',
+                            style: 'cancel',
+                            onPress: () => setConfirmCallItADayVisible(false),
+                        },
+                        {
+                            text: "Yes, I'm Done!",
+                            style: 'default',
+                            onPress: handleConfirmCallItADay,
+                        },
+                    ]}
+                />
+
+                {/* Success/Error Alert */}
                 <Alert
                     visible={alertVisible}
                     title={alertConfig.title}
@@ -244,6 +298,26 @@ const styles = StyleSheet.create({
     headerContent: {
         flex: 1,
     },
+    dayCompleteBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        gap: 12,
+    },
+    bannerTextContainer: {
+        flex: 1,
+    },
+    bannerTitle: {
+        fontSize: 16,
+        marginBottom: 4,
+    },
+    bannerSubtitle: {
+        fontSize: 14,
+        lineHeight: 18,
+    },
     emptyState: {
         alignItems: 'center',
         paddingVertical: 80,
@@ -276,7 +350,7 @@ const styles = StyleSheet.create({
     floatingButton: {
         position: 'absolute',
         bottom: 24,
-        right: 8,
+        right: -8,
         borderRadius: 9999,
         padding: 16,
         flexDirection: 'row',
@@ -290,5 +364,6 @@ const styles = StyleSheet.create({
     floatingButtonText: {
         marginLeft: 8,
         color: '#E6EEF2',
+        fontSize: 16
     },
 });

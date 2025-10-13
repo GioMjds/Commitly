@@ -38,7 +38,6 @@ export default function AddCommitScreen() {
         control,
         handleSubmit,
         setValue,
-        watch,
         reset,
         formState: { errors },
     } = useForm<CommitFormSchema>({
@@ -53,8 +52,6 @@ export default function AddCommitScreen() {
         },
     });
 
-    const difficulty = watch("difficulty");
-
     const handleDifficultySelect = (level: DifficultyLevel) => {
         setValue("difficulty", level);
     };
@@ -65,7 +62,7 @@ export default function AddCommitScreen() {
 
     const onSubmit = async (data: CommitFormSchema) => {
         setLoading(true);
-        
+
         const commitData: CommitFormData = {
             note: data.title,
             title: data.title,
@@ -290,36 +287,42 @@ export default function AddCommitScreen() {
                         <StyledText variant="semibold" style={[styles.fieldLabel, { color: colors.text }]}>
                             Difficulty
                         </StyledText>
-                        <View style={styles.difficultyRow}>
-                            {(['easy', 'medium', 'hard'] as DifficultyLevel[]).map((level) => (
-                                <TouchableOpacity
-                                    key={level}
-                                    onPress={() => handleDifficultySelect(level)}
-                                    style={[
-                                        styles.difficultyButton,
-                                        {
-                                            backgroundColor: difficulty === level ? colors.actionOpacity10 : colors.surface,
-                                            borderColor: difficulty === level ? colors.action : colors.border,
-                                        }
-                                    ]}
-                                >
-                                    <StyledText style={styles.difficultyEmoji}>
-                                        {getDifficultyIcon(level)}
-                                    </StyledText>
-                                    <StyledText
-                                        variant={difficulty === level ? 'semibold' : 'medium'}
-                                        style={[
-                                            styles.difficultyText,
-                                            {
-                                                color: difficulty === level ? colors.action : colors.textSecondary,
-                                            }
-                                        ]}
-                                    >
-                                        {level}
-                                    </StyledText>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                        <Controller
+                            control={control}
+                            name="difficulty"
+                            render={({ field: { value } }) => (
+                                <View style={styles.difficultyRow}>
+                                    {(['easy', 'medium', 'hard'] as DifficultyLevel[]).map((level) => (
+                                        <TouchableOpacity
+                                            key={level}
+                                            onPress={() => handleDifficultySelect(level)}
+                                            style={[
+                                                styles.difficultyButton,
+                                                {
+                                                    backgroundColor: value === level ? colors.actionOpacity10 : colors.surface,
+                                                    borderColor: value === level ? colors.action : colors.border,
+                                                }
+                                            ]}
+                                        >
+                                            <StyledText style={styles.difficultyEmoji}>
+                                                {getDifficultyIcon(level)}
+                                            </StyledText>
+                                            <StyledText
+                                                variant={value === level ? 'semibold' : 'medium'}
+                                                style={[
+                                                    styles.difficultyText,
+                                                    {
+                                                        color: value === level ? colors.action : colors.textSecondary,
+                                                    }
+                                                ]}
+                                            >
+                                                {level}
+                                            </StyledText>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        />
                     </View>
 
                     {/* Description Input */}

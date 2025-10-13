@@ -17,7 +17,7 @@ export default function LoginScreen() {
 
 	const { login } = useAuth();
 	const { loading } = useAuthStore();
-	const { signInWithGithub, request } = useGithubAuth();
+	const { signInWithGithub, request, githubLoading } = useGithubAuth();
 	const { colors } = useThemedStyles();
 
 	const {
@@ -241,15 +241,21 @@ export default function LoginScreen() {
                     <TouchableOpacity
                         style={[styles.githubButton, { backgroundColor: colors.primary }]}
                         onPress={handleGithubLogin}
-                        disabled={!request || loading}
+                        disabled={!request || githubLoading}
                     >
-                        <Ionicons name="logo-github" size={24} color="white" />
-                        <StyledText
-                            variant="semibold"
-                            style={styles.githubButtonText}
-                        >
-                            Continue with GitHub
-                        </StyledText>
+                        {githubLoading ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                            <>
+                                <Ionicons name="logo-github" size={24} color="white" />
+                                <StyledText
+                                    variant="semibold"
+                                    style={styles.githubButtonText}
+                                >
+                                    Continue with GitHub
+                                </StyledText>
+                            </>
+                        )}
                     </TouchableOpacity>
 
 					<View style={styles.signUpRow}>
@@ -367,7 +373,7 @@ const styles = StyleSheet.create({
 	dividerRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginVertical: 12,
+		marginVertical: 6,
 	},
 	dividerLine: {
 		flex: 1,

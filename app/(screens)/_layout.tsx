@@ -22,9 +22,9 @@ export default function ScreensLayout() {
                     }}
                 />
                 <Tabs.Screen
-                    name="history"
+                    name="commits"
                     options={{
-                        title: "History",
+                        title: "Commits",
                     }}
                 />
                 <Tabs.Screen

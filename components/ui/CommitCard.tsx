@@ -148,7 +148,7 @@ export default function CommitCard({ commit }: CommitCardProps) {
 							</View>
 						)}
 						{commit.difficulty && (
-							<View style={[styles.difficultyBadge, { backgroundColor: colors.surface }]}>
+							<View style={[styles.difficultyBadge]}>
 								<StyledText style={styles.difficultyEmoji}>
 									{getDifficultyIcon(commit.difficulty)}
 								</StyledText>
@@ -346,8 +346,8 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 	},
 	manualSection: {
-		marginBottom: 12,
-		padding: 16,
+		marginBottom: 2,
+		padding: 4,
 		borderRadius: 12,
 	},
 	manualTitle: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
 	metaRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 12,
+		gap: 6,
 		marginBottom: 12,
 	},
 	timeSpentBadge: {
@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 4,
+		backgroundColor: 'rgba(124, 58, 237, 0.1)',
 		paddingHorizontal: 12,
 		paddingVertical: 6,
 		borderRadius: 999,

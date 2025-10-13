@@ -27,9 +27,9 @@ const TAB_CONFIG: Record<string, TabConfig> = {
 		icon: 'home',
 		iconOutline: 'home-outline',
 	},
-	history: {
-		name: 'history',
-		label: 'History',
+	commits: {
+		name: 'commits',
+		label: 'Commits',
 		icon: 'list',
 		iconOutline: 'list-outline',
 	},

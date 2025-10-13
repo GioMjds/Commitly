@@ -1,13 +1,13 @@
 import { auth, database } from "@/configs/firebase";
 import { useAuthStore } from "@/store/AuthStore";
-import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
 import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import { GithubAuthProvider, linkWithCredential, signInWithCredential, updateProfile } from "firebase/auth";
 import { ref, set } from "firebase/database";
-import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,8 +18,9 @@ const discovery = {
 };
 
 export const useGithubAuth = () => {
-    const { setUser, setLoading } = useAuthStore();
+    const { setUser } = useAuthStore();
     const [isLinking, setIsLinking] = useState<boolean>(false);
+    const [githubLoading, setGithubLoading] = useState<boolean>(false);
 
     const redirectUri = makeRedirectUri();
 
@@ -34,7 +35,7 @@ export const useGithubAuth = () => {
     );
 
     const handleGithubSignIn = useCallback(async (code: string, linkMode = false) => {
-        setLoading(true);
+        setGithubLoading(true);
         try {
             const tokenResponse = await axios.post(
                 "https://github.com/login/oauth/access_token",
@@ -158,10 +159,10 @@ export const useGithubAuth = () => {
                            (linkMode ? "Failed to link GitHub account" : "GitHub sign-in failed");
             return { success: false, message };
         } finally {
-            setLoading(false);
+            setGithubLoading(false);
             setIsLinking(false);
         }
-    }, [setUser, setLoading, redirectUri]);
+    }, [setUser, redirectUri]);
 
     useEffect(() => {
         if (response?.type === "success") {
@@ -224,5 +225,5 @@ export const useGithubAuth = () => {
         }
     };
 
-    return { signInWithGithub, linkGithubAccount, request };
+    return { signInWithGithub, linkGithubAccount, request, githubLoading };
 };

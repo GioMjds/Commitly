@@ -39,10 +39,18 @@ export const useCommit = () => {
         for (const operation of pendingOperations) {
             try {
                 if (operation.operation === 'create') {
-                    const docRef = await addDoc(collection(firestore, "commits"), operation.data);
+                    // Filter out undefined values before sending to Firebase
+                    const cleanData = Object.fromEntries(
+                        Object.entries(operation.data).filter(([_, value]) => value !== undefined)
+                    );
+                    const docRef = await addDoc(collection(firestore, "commits"), cleanData);
                     updateCommit(operation.id, { id: docRef.id });
                 } else if (operation.operation === 'update') {
-                    await updateDoc(doc(firestore, "commits", operation.id), operation.data);
+                    // Filter out undefined values before sending to Firebase
+                    const cleanData = Object.fromEntries(
+                        Object.entries(operation.data).filter(([_, value]) => value !== undefined)
+                    );
+                    await updateDoc(doc(firestore, "commits", operation.id), cleanData);
                 } else if (operation.operation === 'delete') {
                     await deleteDoc(doc(firestore, "commits", operation.id));
                 }
@@ -102,24 +110,32 @@ export const useCommit = () => {
         const dateString = now.toISOString().split("T")[0];
         const optimisticId = `temp_${Date.now()}`;
 
-        const commitData = {
+        const commitData: any = {
             userId: user.uid,
             note: data.note,
-            title: data.title || undefined,
-            timeSpent: data.timeSpent || undefined,
-            timeUnit: data.timeUnit || undefined,
-            difficulty: data.difficulty || undefined,
-            description: data.description || undefined,
-            tag: data.tag || undefined,
-            mood: data.mood || undefined,
             createdAt: now,
             updatedAt: now,
             date: dateString,
         };
 
+        if (data.title) commitData.title = data.title;
+        if (data.timeSpent !== undefined && data.timeSpent !== null) commitData.timeSpent = data.timeSpent;
+        if (data.timeUnit) commitData.timeUnit = data.timeUnit;
+        if (data.difficulty) commitData.difficulty = data.difficulty;
+        if (data.description) commitData.description = data.description;
+
         const optimisticCommit: DailyCommit = {
             id: optimisticId,
-            ...commitData,
+            userId: user.uid,
+            note: data.note,
+            createdAt: now,
+            updatedAt: now,
+            date: dateString,
+            ...(data.title && { title: data.title }),
+            ...(data.timeSpent !== undefined && data.timeSpent !== null && { timeSpent: data.timeSpent }),
+            ...(data.timeUnit && { timeUnit: data.timeUnit }),
+            ...(data.difficulty && { difficulty: data.difficulty }),
+            ...(data.description && { description: data.description }),
         };
 
         // Optimistic UI update - add immediately
@@ -130,7 +146,6 @@ export const useCommit = () => {
         const netState = await NetInfo.fetch();
         
         if (!netState.isConnected) {
-            // Save to pending operations for later sync
             await addPendingOperation({
                 id: optimisticId,
                 data: commitData,
@@ -165,7 +180,6 @@ export const useCommit = () => {
                 message: "Commit created successfully!",
             };
         } catch {
-            // On error, keep optimistic UI and queue for later
             await addPendingOperation({
                 id: optimisticId,
                 data: commitData,
@@ -192,17 +206,16 @@ export const useCommit = () => {
             const now = new Date();
             const commitRef = doc(firestore, "commits", id);
 
-            const updateData = {
+            const updateData: any = {
                 note: data.note,
-                tag: data.tag || undefined,
-                mood: data.mood || undefined,
-                title: data.title || undefined,
-                timeSpent: data.timeSpent || undefined,
-                timeUnit: data.timeUnit || undefined,
-                difficulty: data.difficulty || undefined,
-                description: data.description || undefined,
                 updatedAt: now,
             };
+
+            if (data.title) updateData.title = data.title;
+            if (data.timeSpent !== undefined && data.timeSpent !== null) updateData.timeSpent = data.timeSpent;
+            if (data.timeUnit) updateData.timeUnit = data.timeUnit;
+            if (data.difficulty) updateData.difficulty = data.difficulty;
+            if (data.description) updateData.description = data.description;
 
             await updateDoc(commitRef, updateData);
             updateCommit(id, { ...updateData, updatedAt: now });

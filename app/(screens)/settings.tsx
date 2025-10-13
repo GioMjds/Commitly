@@ -3,17 +3,15 @@ import Alert from '@/components/ui/Alert';
 import StyledText from '@/components/ui/StyledText';
 import { useGithubAuth } from '@/hooks/useGithubAuth';
 import { useGithubCommits } from '@/hooks/useGithubCommits';
-import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from '@/store/AuthStore';
 import { useThemeStore } from '@/store/ThemeStore';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
 	ActivityIndicator,
 	ScrollView,
 	StyleSheet,
-	Switch,
 	TouchableOpacity,
 	View,
 } from 'react-native';
@@ -28,18 +26,10 @@ export default function SettingsScreen() {
 	});
 
 	const { user } = useAuthStore();
-	const { syncSettings, updateSyncSettings, loading } = useGithubCommits();
+	const { syncSettings, loading } = useGithubCommits();
 	const { linkGithubAccount } = useGithubAuth();
 	const { themeMode, setThemeMode } = useThemeStore();
-	const { activeTheme, isDark } = useTheme();
 	const { colors } = useThemedStyles();
-
-	useEffect(() => {
-		console.log(`[Settings] 📊 Component mounted/updated`);
-		console.log(`[Settings] 📱 Current themeMode: ${themeMode}`);
-		console.log(`[Settings] 🎨 Current activeTheme: ${activeTheme}`);
-		console.log(`[Settings] 🌙 isDark: ${isDark}`);
-	}, [themeMode, activeTheme, isDark]);
 
 	const isGitHubUser = user?.providerData?.some(
 		(provider) => provider.providerId === 'github.com'
@@ -48,29 +38,6 @@ export default function SettingsScreen() {
 	const isEmailUser = user?.providerData?.every(
 		(provider) => provider.providerId === 'password'
 	);
-
-	const handleToggleSync = async () => {
-		const result = await updateSyncSettings({
-			enabled: !syncSettings.enabled,
-		});
-
-		if (result.success) {
-			setAlertConfig({
-				title: 'Success',
-				message: syncSettings.enabled
-					? 'GitHub sync disabled'
-					: 'GitHub sync enabled',
-				icon: 'checkmark-circle-outline',
-			});
-		} else {
-			setAlertConfig({
-				title: 'Error',
-				message: result.message,
-				icon: 'alert-circle-outline',
-			});
-		}
-		setAlertVisible(true);
-	};
 
 	const handleLinkGithub = async () => {
 		const result = await linkGithubAccount();
@@ -90,9 +57,7 @@ export default function SettingsScreen() {
 	};
 
 	const handleThemeChange = async (mode: 'light' | 'dark' | 'system') => {
-		console.log(`[Settings] 👆 User selected theme: ${mode}`);
 		await setThemeMode(mode);
-		console.log(`[Settings] ✅ Theme change completed for: ${mode}`);
 	};
 
 	return (
@@ -315,7 +280,7 @@ export default function SettingsScreen() {
 							/* GitHub User - Full Sync Features */
 							<>
 								{/* Enable Sync Toggle */}
-								<View style={styles.syncToggleRow}>
+								{/* <View style={styles.syncToggleRow}>
 									<View style={styles.syncToggleText}>
 										<StyledText
 											variant="semibold"
@@ -339,11 +304,11 @@ export default function SettingsScreen() {
 										}}
 										thumbColor="#ffffff"
 									/>
-								</View>
+								</View> */}
 
 								{/* Last Sync Info */}
 								{syncSettings.lastSyncDate && (
-									<View style={[styles.lastSyncContainer, { borderTopColor: colors.border }]}>
+									<View style={[{ borderTopColor: colors.border }]}>
 										<StyledText
 											variant="light"
 											style={[styles.lastSyncText, { color: colors.textSecondary }]}
@@ -480,11 +445,6 @@ const styles = StyleSheet.create({
 	},
 	syncSubtitle: {
 		fontSize: 14,
-	},
-	lastSyncContainer: {
-		marginTop: 16,
-		paddingTop: 16,
-		borderTopWidth: 1,
 	},
 	lastSyncText: {
 		fontSize: 18,
