@@ -27,19 +27,11 @@ export const useCallItADay = () => {
             
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                
-                console.log('[CallItADay] Status updated:', {
-                    lastCalledDate: data.lastCalledDate,
-                    today,
-                    calledToday: data.lastCalledDate === today
-                });
-                
                 setStatus({
                     lastCalledDate: data.lastCalledDate,
                     calledToday: data.lastCalledDate === today,
                 });
             } else {
-                console.log('[CallItADay] No status found, initializing');
                 setStatus({
                     lastCalledDate: null,
                     calledToday: false,
@@ -52,35 +44,29 @@ export const useCallItADay = () => {
 
     const callItADay = async (): Promise<{ success: boolean; message: string }> => {
         if (!user) {
-            console.log('[CallItADay] Error: User not authenticated');
             return { success: false, message: 'User not authenticated' };
         }
 
         setLoading(true);
-        console.log('[CallItADay] Starting callItADay process...');
 
         try {
             const today = new Date().toISOString().split('T')[0];
             const statusRef = ref(database, `users/${user.uid}/callItADay`);
 
-            console.log('[CallItADay] Checking if already called today:', today);
             const snapshot = await get(statusRef);
             
             if (snapshot.exists() && snapshot.val().lastCalledDate === today) {
-                console.log('[CallItADay] Already called today');
-                return { 
+                return {
                     success: false, 
                     message: "You've already called it a day! See you tomorrow! 👋" 
                 };
             }
 
-            console.log('[CallItADay] Marking day as complete...');
             await set(statusRef, {
                 lastCalledDate: today,
                 timestamp: new Date().toISOString(),
             });
 
-            console.log('[CallItADay] Successfully marked day as complete');
             return {
                 success: true,
                 message: "Great work today! Time to rest and recharge. See you tomorrow! 🌙",
@@ -98,21 +84,17 @@ export const useCallItADay = () => {
 
     const canCallItADay = (): boolean => {
         const result = !status.calledToday;
-        console.log('[CallItADay] canCallItADay:', result, 'calledToday:', status.calledToday);
         return result;
     };
 
-    // Reset function for testing - removes the callItADay status
     const resetCallItADay = async (): Promise<{ success: boolean; message: string }> => {
         if (!user) {
-            console.log('[CallItADay] Error: User not authenticated');
             return { success: false, message: 'User not authenticated' };
         }
 
         try {
             const statusRef = ref(database, `users/${user.uid}/callItADay`);
             await set(statusRef, null);
-            console.log('[CallItADay] Reset successful - status cleared');
             return {
                 success: true,
                 message: 'Call it a Day status has been reset!',

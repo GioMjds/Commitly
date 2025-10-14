@@ -56,19 +56,12 @@ export default function HistoryScreen() {
         setConfirmCallItADayVisible(false);
 
         if (isGitHubUser) {
-            console.log('[Commits] Syncing GitHub commits before calling it a day...');
             const syncResult = await syncGithubCommits();
-            console.log('[Commits] GitHub sync result:', syncResult);
-            if (syncResult.success) {
-                console.log('[Commits] GitHub sync successful, fetching commits...');
-                await fetchCommits();
-            }
+            syncResult.success ?? await fetchCommits();
         }
 
         // Then mark the day as complete
-        console.log('[Commits] Calling it a day...');
         const result = await callItADay();
-        console.log('[Commits] callItADay result:', result);
 
         setAlertConfig({
             title: result.success ? 'Day Complete! 🎉' : 'Oops!',

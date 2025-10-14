@@ -169,27 +169,12 @@ export const useGithubCommits = () => {
 
             const username = githubDataSnapshot.val().username;
 
-            console.log('🔄 Starting GitHub sync...');
-            console.log('📅 Last sync date:', syncSettings.lastSyncDate);
-
-            // Calculate lookback date - always check at least the last 7 days to catch delayed GitHub indexing
             const now = new Date();
             const lookbackDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // Always look back 7 days
 
-            console.log('📅 Lookback date:', lookbackDate.toISOString());
-            console.log('📅 Current time:', now.toISOString());
-            
             const commits = await fetchGithubCommits(username, token, lookbackDate);
 
-            console.log(`✅ Fetched ${commits.length} commits from GitHub`);
-            
-            // Log all fetched commits for debugging
-            commits.forEach((commit, idx) => {
-                console.log(`  [${idx + 1}] ${new Date(commit.date).toISOString()} - ${commit.message.substring(0, 50)}`);
-            });
-
             if (commits.length > 0) {
-                // createDailyCommitsFromGitHub handles duplicate checking internally
                 const createdCount = await createDailyCommitsFromGitHub(commits);
 
                 const commitsRef = ref(
@@ -207,14 +192,12 @@ export const useGithubCommits = () => {
                 });
 
                 if (createdCount > 0) {
-                    console.log(`✅ Created/updated ${createdCount} daily commit entries`);
                     return {
                         success: true,
                         commits: commits,
                         message: `✅ Synced ${commits.length} GitHub commits and created/updated ${createdCount} daily commits!`,
                     };
                 } else {
-                    console.log(`✅ All commits already synced`);
                     return {
                         success: true,
                         commits: [],
@@ -250,13 +233,12 @@ export const useGithubCommits = () => {
         if (!user) return 0;
         let createdCount = 0;
 
-        // Get all existing commits with their GitHub SHAs
         const existingQuery = query(
             collection(firestore, "commits"),
             where("userId", "==", user.uid)
         );
         const existingDocs = await getDocs(existingQuery);
-        
+
         const existingShas = new Set<string>();
         existingDocs.forEach((doc) => {
             const data = doc.data();
@@ -267,17 +249,10 @@ export const useGithubCommits = () => {
             }
         });
 
-        console.log(`📋 Checking against ${existingShas.size} existing GitHub commit SHAs`);
-
         // Filter out commits that already exist
         const newCommits = githubCommits.filter(commit => !existingShas.has(commit.sha));
-        
-        if (newCommits.length === 0) {
-            console.log('✅ All commits already exist in database');
-            return 0;
-        }
 
-        console.log(`📝 Creating entries for ${newCommits.length} new commits`);
+        if (newCommits.length === 0) return 0;
 
         const commitsByDate = newCommits.reduce((acc, commit) => {
             const date = new Date(commit.date).toISOString().split("T")[0];
@@ -290,7 +265,6 @@ export const useGithubCommits = () => {
 
         for (const [date, commits] of Object.entries(commitsByDate)) {
             try {
-                // Check if there's already a commit for this date
                 const dateQuery = query(
                     collection(firestore, "commits"),
                     where("userId", "==", user.uid),
@@ -323,7 +297,6 @@ export const useGithubCommits = () => {
                     };
 
                     await addDoc(collection(firestore, "commits"), commitData);
-                    console.log(`  ✅ Created commit for ${date} with ${commits.length} GitHub commits`);
                     createdCount++;
                 } else {
                     // Update existing commit entry with new GitHub commits
@@ -350,8 +323,7 @@ export const useGithubCommits = () => {
                         githubCommits: updatedGithubCommits,
                         updatedAt: new Date(),
                     });
-                    
-                    console.log(`  ✅ Updated commit for ${date} with ${commits.length} new GitHub commits`);
+
                     createdCount++;
                 }
             } catch (error) {
