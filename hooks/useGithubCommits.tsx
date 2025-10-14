@@ -140,96 +140,121 @@ export const useGithubCommits = () => {
 	};
 
 	const syncGithubCommits = async () => {
-		if (!user) return { success: false, message: 'User not authenticated' };
-		setLoading(true);
+        if (!user) return { success: false, message: 'User not authenticated' };
+        setLoading(true);
 
-		try {
-			const token = await SecureStore.getItemAsync(
-				`github_token_${user.uid}`
-			);
+        try {
+            const token = await SecureStore.getItemAsync(
+                `github_token_${user.uid}`
+            );
 
-			if (!token) {
-				return {
-					success: false,
-					message: 'GitHub token not found. Please re-authenticate with GitHub.',
-				};
-			}
+            if (!token) {
+                return {
+                    success: false,
+                    message: 'GitHub token not found. Please re-authenticate with GitHub.',
+                };
+            }
 
-			const githubDataSnapshot = await get(
-				ref(database, `users/${user.uid}/github`)
-			);
+            const githubDataSnapshot = await get(
+                ref(database, `users/${user.uid}/github`)
+            );
 
-			if (!githubDataSnapshot.exists()) {
-				return {
-					success: false,
-					message: 'GitHub username not found.',
-				};
-			}
+            if (!githubDataSnapshot.exists()) {
+                return {
+                    success: false,
+                    message: 'GitHub username not found.',
+                };
+            }
 
-			const username = githubDataSnapshot.val().username;
-			
-			const lookbackDate = syncSettings.lastSyncDate
-				? new Date(new Date(syncSettings.lastSyncDate).getTime() - 60 * 60 * 1000)
-				: new Date(Date.now() - 48 * 60 * 60 * 1000);
-			
-			const commits = await fetchGithubCommits(username, token, lookbackDate);
+            const username = githubDataSnapshot.val().username;
 
-			// Filter to only truly new commits (after lastSyncDate, not lookbackDate)
-			const lastSyncDate = syncSettings.lastSyncDate
-				? new Date(syncSettings.lastSyncDate)
-				: new Date(Date.now() - 24 * 60 * 60 * 1000);
+            console.log('🔄 Starting GitHub sync...');
+            console.log('📅 Last sync date:', syncSettings.lastSyncDate);
 
-			const newCommits = commits.filter(
-				(commit) => new Date(commit.date) > lastSyncDate
-			);
+            // Calculate lookback date - always check at least the last 48 hours
+            const now = new Date();
+            const lookbackDate = syncSettings.lastSyncDate
+                ? new Date(Math.min(
+                    new Date(syncSettings.lastSyncDate).getTime() - 60 * 60 * 1000, // Last sync - 1 hour
+                    now.getTime() - 48 * 60 * 60 * 1000 // Or 48 hours ago, whichever is more recent
+                ))
+                : new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
-			if (newCommits.length > 0) {
-				const createdCount = await createDailyCommitsFromGitHub(
-					newCommits
-				);
+            console.log('📅 Lookback date:', lookbackDate.toISOString());
+            
+            const commits = await fetchGithubCommits(username, token, lookbackDate);
 
-				const commitsRef = ref(
-					database,
-					`users/${user.uid}/githubCommits`
-				);
-				await set(commitsRef, {
-					commits: newCommits,
-					lastSync: new Date().toISOString(),
-					createdInFirestore: createdCount,
-				});
+            console.log(`✅ Fetched ${commits.length} commits from GitHub`);
 
-				await updateSyncSettings({
-					lastSyncDate: new Date().toISOString(),
-				});
+            // Get the start of today in local timezone
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
 
-				return {
-					success: true,
-					commits: newCommits,
-					message: `✅ Synced ${newCommits.length} GitHub commits and created ${createdCount} daily commits!`,
-				};
-			}
-			
-			await updateSyncSettings({
-				lastSyncDate: new Date().toISOString(),
-			});
+            // Filter commits: Include ALL commits from today + any new commits from before
+            const lastSyncDate = syncSettings.lastSyncDate
+                ? new Date(syncSettings.lastSyncDate)
+                : new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-			return {
-				success: true,
-				commits: [],
-				message: `✅ All caught up! No new commits since last sync.`,
-			};
-		} catch (error: any) {
-			if (error?.response?.status === 401) {
-				return {
-					success: false,
-					message: 'GitHub token expired. Please re-authenticate with GitHub.',
-				};
-			}
-			return { success: false, message: `Sync failed: ${error.message}` };
-		} finally {
-			setLoading(false);
-		}
-	};
+            const newCommits = commits.filter((commit) => {
+                const commitDate = new Date(commit.date);
+                // Include if commit is from today OR after last sync
+                const isFromToday = commitDate >= todayStart;
+                const isAfterLastSync = commitDate > lastSyncDate;
+                return isFromToday || isAfterLastSync;
+            });
+
+            console.log(`🆕 Found ${newCommits.length} new/today commits to process`);
+
+            if (newCommits.length > 0) {
+                const createdCount = await createDailyCommitsFromGitHub(
+                    newCommits
+                );
+
+                const commitsRef = ref(
+                    database,
+                    `users/${user.uid}/githubCommits`
+                );
+                await set(commitsRef, {
+                    commits: newCommits,
+                    lastSync: new Date().toISOString(),
+                    createdInFirestore: createdCount,
+                });
+
+                await updateSyncSettings({
+                    lastSyncDate: new Date().toISOString(),
+                });
+
+                console.log(`✅ Created ${createdCount} daily commit entries`);
+
+                return {
+                    success: true,
+                    commits: newCommits,
+                    message: `✅ Synced ${newCommits.length} GitHub commits and created ${createdCount} daily commits!`,
+                };
+            }
+            
+            await updateSyncSettings({
+                lastSyncDate: new Date().toISOString(),
+            });
+
+            return {
+                success: true,
+                commits: [],
+                message: `✅ All caught up! No new commits since last sync.`,
+            };
+        } catch (error: any) {
+            console.error('❌ Sync error:', error);
+            if (error?.response?.status === 401) {
+                return {
+                    success: false,
+                    message: 'GitHub token expired. Please re-authenticate with GitHub.',
+                };
+            }
+            return { success: false, message: `Sync failed: ${error.message}` };
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const createDailyCommitsFromGitHub = async (githubCommits: GitHubCommit[]): Promise<number> => {
         if (!user) return 0;

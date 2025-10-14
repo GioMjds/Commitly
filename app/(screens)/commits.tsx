@@ -1,7 +1,6 @@
 import Header from "@/components/layout/Header";
 import Alert from '@/components/ui/Alert';
 import CommitCard from "@/components/ui/CommitCard";
-import FilterBar from "@/components/ui/FilterBar";
 import StyledText from "@/components/ui/StyledText";
 import { useCallItADay } from "@/hooks/useCallItADay";
 import { useCommit } from "@/hooks/useCommit";
@@ -26,7 +25,7 @@ export default function HistoryScreen() {
     const { commits, loading } = useCommitStore();
     const { fetchCommits } = useCommit();
     const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
-    const { callItADay, canCallItADay, loading: callItADayLoading } = useCallItADay();
+    const { callItADay, canCallItADay, resetCallItADay, loading: callItADayLoading } = useCallItADay();
 
     const [alertVisible, setAlertVisible] = useState<boolean>(false);
     const [confirmCallItADayVisible, setConfirmCallItADayVisible] = useState<boolean>(false);
@@ -92,19 +91,38 @@ export default function HistoryScreen() {
         
         // First sync GitHub commits
         if (isGitHubUser) {
+            console.log('[Commits] Syncing GitHub commits before calling it a day...');
             const syncResult = await syncGithubCommits();
+            console.log('[Commits] GitHub sync result:', syncResult);
             if (syncResult.success) {
+                console.log('[Commits] GitHub sync successful, fetching commits...');
                 await fetchCommits();
             }
         }
 
         // Then mark the day as complete
+        console.log('[Commits] Calling it a day...');
         const result = await callItADay();
+        console.log('[Commits] callItADay result:', result);
 
         setAlertConfig({
             title: result.success ? 'Day Complete! 🎉' : 'Oops!',
             message: result.message,
             icon: result.success ? 'moon' : 'alert-circle-outline',
+        });
+        setAlertVisible(true);
+    };
+
+    // FOR TESTING ONLY - Reset "Call it a Day" status
+    const handleResetCallItADay = async () => {
+        console.log('[Commits] Resetting Call it a Day status...');
+        const result = await resetCallItADay();
+        console.log('[Commits] Reset result:', result);
+        
+        setAlertConfig({
+            title: result.success ? 'Reset Successful! 🔄' : 'Reset Failed',
+            message: result.message,
+            icon: result.success ? 'refresh-circle-outline' : 'alert-circle-outline',
         });
         setAlertVisible(true);
     };
@@ -187,14 +205,18 @@ export default function HistoryScreen() {
                                 Great work today! See you tomorrow for another productive day.
                             </StyledText>
                         </View>
+                        {/* Hidden reset button for testing */}
+                        <TouchableOpacity onPress={handleResetCallItADay} style={{ padding: 8 }}>
+                            <Ionicons name="refresh-circle-outline" size={24} color="#7C3AED" />
+                        </TouchableOpacity>
                     </View>
                 )}
 
                 {/* Filter Bar */}
-                <FilterBar
+                {/* <FilterBar
                     selectedDateRange={selectedDateRange}
                     onDateRangeChange={setSelectedDateRange}
-                />
+                /> */}
 
                 <FlatList
                     data={filteredCommits}

@@ -1,7 +1,7 @@
 import StyledText from '@/components/ui/StyledText';
 import { DashboardStats } from '@/types/Commit.types';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 type StreakBadgeProps = {

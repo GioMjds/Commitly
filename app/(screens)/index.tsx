@@ -43,9 +43,7 @@ export default function DashboardScreen() {
 
 	useFocusEffect(
 		useCallback(() => {
-			if (user) {
-				fetchCommits();
-			}
+			if (user) fetchCommits();
 		}, [user, fetchCommits])
 	);
 
