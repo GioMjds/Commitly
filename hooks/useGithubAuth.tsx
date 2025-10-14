@@ -18,9 +18,10 @@ const discovery = {
 };
 
 export const useGithubAuth = () => {
-    const { setUser } = useAuthStore();
     const [isLinking, setIsLinking] = useState<boolean>(false);
     const [githubLoading, setGithubLoading] = useState<boolean>(false);
+
+    const setUser = useAuthStore((state) => state.setUser);
 
     const redirectUri = makeRedirectUri();
 

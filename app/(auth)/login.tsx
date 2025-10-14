@@ -35,24 +35,18 @@ export default function LoginScreen() {
 	});
 
 	const handleGithubLogin = async () => {
-		const result = await signInWithGithub();
-		if (result && !result.success) {
-			Alert.alert('Error', result.message || 'GitHub login failed. Please try again.');
-		}
+		await signInWithGithub();
 	}
 
-	const onSubmit = async (data: LoginSchema) => {
-		const result = await login({
-			email: data.email,
-			password: data.password,
-		});
+	const onSubmit = (data: LoginSchema) => {
+		login.mutate(data);
 
-		if (result.success) {
+		if (login.isSuccess) {
 			router.replace('/(screens)');
 			return;
 		}
 
-		const message = result.message || 'Login failed. Please try again.';
+		const message = login.error?.message || 'Login failed. Please try again.';
 
 		const passwordRelated = [
 			'Incorrect password',

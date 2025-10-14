@@ -3,7 +3,6 @@ import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
 import { CommitFormData, DailyCommit } from "@/types/Commit.types";
 import NetInfo from "@react-native-community/netinfo";
-import * as Haptics from 'expo-haptics';
 import {
     addDoc,
     collection,
@@ -138,9 +137,7 @@ export const useCommit = () => {
             ...(data.description && { description: data.description }),
         };
 
-        // Optimistic UI update - add immediately
         addCommit(optimisticCommit);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // Check network status
         const netState = await NetInfo.fetch();

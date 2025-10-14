@@ -52,11 +52,12 @@ const Header = ({ title, subtitle, showProfile = true }: HeaderProps) => {
 	}, [user]);
 
 	const confirmLogout = async () => {
-		const result = await logout();
-		if (result.success) {
+		try {
+			await logout.mutateAsync();
 			router.replace('/(auth)/login');
-		} else {
-			setErrorMessage(result.message);
+		} catch (error: any) {
+			const message = error?.message || 'Logout failed. Please try again.';
+			setErrorMessage(message);
 			setErrorAlertVisible(true);
 		}
 	};

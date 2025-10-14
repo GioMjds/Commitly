@@ -1,6 +1,5 @@
 import StyledText from '@/components/ui/StyledText';
 import { DashboardStats } from '@/types/Commit.types';
-import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -13,9 +12,6 @@ export default function StreakBadge({ stats }: StreakBadgeProps) {
 	const [prevStreak, setPrevStreak] = useState<number>(currentStreak);
 
 	useEffect(() => {
-		if (currentStreak > prevStreak && currentStreak > 0) {
-			Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-		}
 		setPrevStreak(currentStreak);
 	}, [currentStreak, prevStreak]);
 

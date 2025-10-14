@@ -46,23 +46,8 @@ export default function RegisterScreen() {
 		}
 	};
 
-	const onSubmit = async (data: RegisterFormData) => {
-		const result = await register(data);
-
-		if (result.success) {
-			Alert.alert(
-				'Success!',
-				'Registration successful! Please check your email for verification.',
-				[
-					{
-						text: 'OK',
-						onPress: () => router.push('/(auth)/verify'),
-					},
-				]
-			);
-		} else {
-			Alert.alert('Error', result.message as string);
-		}
+	const onSubmit = (data: RegisterFormData) => {
+		register.mutate(data);
 	};
 
 	return (
