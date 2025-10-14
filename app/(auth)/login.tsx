@@ -16,7 +16,7 @@ export default function LoginScreen() {
 	const [showPassword, setShowPassword] = useState<boolean>(false);
 
 	const { login } = useAuth();
-	const { loading } = useAuthStore();
+	const loading = useAuthStore((state) => state.loading);
 	const { signInWithGithub, request, githubLoading } = useGithubAuth();
 	const { colors } = useThemedStyles();
 

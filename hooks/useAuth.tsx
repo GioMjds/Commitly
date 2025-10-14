@@ -12,7 +12,8 @@ import {
 } from "firebase/auth";
 
 export const useAuth = () => {
-    const { setUser, setLoading } = useAuthStore();
+    const setUser = useAuthStore((state) => state.setUser);
+    const setLoading = useAuthStore((state) => state.setLoading);
 
     const register = async ({ email, password }: AuthForms) => {
         setLoading(true);

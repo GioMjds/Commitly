@@ -21,7 +21,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DashboardScreen() {
-	const { user } = useAuthStore();
+	const user = useAuthStore((state) => state.user);
 	const { commits, streakData, loading } = useCommitStore();
 	const { fetchCommits } = useCommit();
 	const { colors } = useThemedStyles();
