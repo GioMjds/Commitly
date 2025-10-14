@@ -8,25 +8,14 @@ import { useGithubCommits } from "@/hooks/useGithubCommits";
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuthStore } from "@/store/AuthStore";
 import { useCommitStore } from "@/store/CommitStore";
-import { DateRange } from "@/types/History.types";
 import { Ionicons } from "@expo/vector-icons";
-import { isAfter, parseISO, subDays, subMonths, subYears } from 'date-fns';
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HistoryScreen() {
     const [refreshing, setRefreshing] = useState<boolean>(false);
-    const [selectedDateRange, setSelectedDateRange] = useState<DateRange>('all');
-    const { colors } = useThemedStyles();
-
-    const { user } = useAuthStore();
-    const { commits, loading } = useCommitStore();
-    const { fetchCommits } = useCommit();
-    const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
-    const { callItADay, canCallItADay, resetCallItADay, loading: callItADayLoading } = useCallItADay();
-
     const [alertVisible, setAlertVisible] = useState<boolean>(false);
     const [confirmCallItADayVisible, setConfirmCallItADayVisible] = useState<boolean>(false);
     const [alertConfig, setAlertConfig] = useState({
@@ -35,38 +24,16 @@ export default function HistoryScreen() {
         icon: 'checkmark-circle-outline' as keyof typeof Ionicons.glyphMap,
     });
 
+    const { colors } = useThemedStyles();
+    const { user } = useAuthStore();
+    const { commits, loading } = useCommitStore();
+    const { fetchCommits } = useCommit();
+    const { syncGithubCommits, loading: syncLoading } = useGithubCommits();
+    const { callItADay, canCallItADay, loading: callItADayLoading } = useCallItADay();
+
     const isGitHubUser = user?.providerData?.some(
         (provider) => provider.providerId === 'github.com'
     );
-
-    const filteredCommits = useMemo(() => {
-        let filtered = [...commits];
-
-        if (selectedDateRange !== 'all') {
-            const now = new Date();
-            let cutoffDate: Date;
-
-            switch (selectedDateRange) {
-                case 'week':
-                    cutoffDate = subDays(now, 7);
-                    break;
-                case 'month':
-                    cutoffDate = subMonths(now, 1);
-                    break;
-                case 'year':
-                    cutoffDate = subYears(now, 1);
-                    break;
-                default:
-                    cutoffDate = new Date(0);
-            }
-
-            filtered = filtered.filter(commit => 
-                isAfter(parseISO(commit.date), cutoffDate)
-            );
-        }
-
-        return filtered;
-    }, [commits, selectedDateRange]);
 
     useFocusEffect(
         useCallback(() => {
@@ -82,14 +49,12 @@ export default function HistoryScreen() {
     }, [user, fetchCommits]);
 
     const handleCallItADayPress = () => {
-        // Show confirmation dialog
         setConfirmCallItADayVisible(true);
     };
 
     const handleConfirmCallItADay = async () => {
         setConfirmCallItADayVisible(false);
-        
-        // First sync GitHub commits
+
         if (isGitHubUser) {
             console.log('[Commits] Syncing GitHub commits before calling it a day...');
             const syncResult = await syncGithubCommits();
@@ -109,20 +74,6 @@ export default function HistoryScreen() {
             title: result.success ? 'Day Complete! 🎉' : 'Oops!',
             message: result.message,
             icon: result.success ? 'moon' : 'alert-circle-outline',
-        });
-        setAlertVisible(true);
-    };
-
-    // FOR TESTING ONLY - Reset "Call it a Day" status
-    const handleResetCallItADay = async () => {
-        console.log('[Commits] Resetting Call it a Day status...');
-        const result = await resetCallItADay();
-        console.log('[Commits] Reset result:', result);
-        
-        setAlertConfig({
-            title: result.success ? 'Reset Successful! 🔄' : 'Reset Failed',
-            message: result.message,
-            icon: result.success ? 'refresh-circle-outline' : 'alert-circle-outline',
         });
         setAlertVisible(true);
     };
@@ -205,21 +156,11 @@ export default function HistoryScreen() {
                                 Great work today! See you tomorrow for another productive day.
                             </StyledText>
                         </View>
-                        {/* Hidden reset button for testing */}
-                        <TouchableOpacity onPress={handleResetCallItADay} style={{ padding: 8 }}>
-                            <Ionicons name="refresh-circle-outline" size={24} color="#7C3AED" />
-                        </TouchableOpacity>
                     </View>
                 )}
 
-                {/* Filter Bar */}
-                {/* <FilterBar
-                    selectedDateRange={selectedDateRange}
-                    onDateRangeChange={setSelectedDateRange}
-                /> */}
-
                 <FlatList
-                    data={filteredCommits}
+                    data={commits}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => <CommitCard commit={item} /> }
                     ListEmptyComponent={renderEmpty}
